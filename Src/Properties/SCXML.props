@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <!--debug suffix-->
+    <DebugSuffixUnderscore Condition="'$(Configuration)'=='Debug'">_d</DebugSuffixUnderscore>
+    <DebugSuffixUnderscore Condition="'$(Configuration)'!='Debug'">
+    </DebugSuffixUnderscore>
+    <!--platform-->
+    <!--ShortPlatform Condition="'$(Platform)' == 'Win32'">x86</ShortPlatform-->
+    <!--ShortPlatform Condition="'$(Platform)' == 'x64'">x64</ShortPlatform-->
+    <!--VcToolset-->
+    <VcToolset Condition="'$(PlatformToolset)' == 'v120'">vc12</VcToolset>
+    <VcToolset Condition="'$(PlatformToolset)' == 'v140'">vc14</VcToolset>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(USCXML_2_ROOT)\$(VcToolset)_plugins;$(USCXML_2_ROOT)\src;$(USCXML_2_ROOT)\contrib\src;$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\libcurl\include;$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\xerces-c\include;$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\libevent\include;$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\uriparser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(USCXML_2_ROOT)\$(VcToolset)_plugins\lib\$(Configuration);$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\libcurl\lib;$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\xerces-c\lib;$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\libevent\lib;$(USCXML_2_ROOT)\$(VcToolset)_plugins\deps\uriparser\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>USCXML_vc14$(DebugSuffixUnderscore).lib;libcurl_a.lib;xerces-c_3.lib;libevent.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

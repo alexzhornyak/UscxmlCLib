@@ -1,2 +1,12 @@
 Debug/
 Release/
+
+# C++ Builder
+__history
+*.cbproj.local
+
+# Visual Studio
+.vs
+*.db
+*.filters
+*.vcxproj.user
