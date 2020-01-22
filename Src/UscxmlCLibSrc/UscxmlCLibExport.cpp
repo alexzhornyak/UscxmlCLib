@@ -12,6 +12,7 @@
 
 using namespace uscxml;
 
+/* Global Library Variables */
 std::string g_LAST_ERROR = "";
 void SetLastUsclibError(const std::string &sErr) {
 	g_LAST_ERROR = sErr;
@@ -20,6 +21,8 @@ void SetLastUsclibError(const std::string &sErr) {
 
 bool g_HTTP_ENABLED = false;
 
+std::set<UsclibInterpreter *> g_INTERPRETERS;
+
 #define	CATCH_USCLIB_ALL		catch (uscxml::ErrorEvent &e) {	\
 									std::stringstream ss;	\
 									ss << e;	\
@@ -27,7 +30,9 @@ bool g_HTTP_ENABLED = false;
 								catch (std::exception &e) { SetLastUsclibError(e.what()); }	\
 								catch (...) { SetLastUsclibError("Unknown exception"); }			
 
-
+#define CHECK_INTERPRETER_VALID(interpreter)	if (g_INTERPRETERS.find(interpreter)==g_INTERPRETERS.end()) \
+												{ std::stringstream ss; ss << "UsclibInterpreter:[0x" <<  std::hex << \
+												reinterpret_cast<int>(interpreter) << "] not initialized!"; throw std::exception(ss.str().c_str()); }
 
 const char USCXMLCLIBAPI * usclib_GetLastError(void) {
 	return g_LAST_ERROR.c_str();
@@ -95,6 +100,7 @@ int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 			g_HTTP_ENABLED);
 
 		*AInterpreter = AScxmlBase;
+		g_INTERPRETERS.insert(*AInterpreter);
 
 		return USCLIB_SUCCESS;
 	}
@@ -105,10 +111,12 @@ int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 
 int USCXMLCLIBAPI usclib_CloseInterpreter(UsclibInterpreter *AInterpreter) {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		g_INTERPRETERS.erase(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+		AScxmlBase->registerOnStopped(nullptr, nullptr);
 		delete AScxmlBase;
 		
 		return USCLIB_SUCCESS;
@@ -121,8 +129,7 @@ int USCXMLCLIBAPI usclib_CloseInterpreter(UsclibInterpreter *AInterpreter) {
 int USCXMLCLIBAPI usclib_RegisterLogCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_LOG ACallback, void *AUser)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->registerOnInterpreterLog(ACallback, AUser);
@@ -137,8 +144,7 @@ int USCXMLCLIBAPI usclib_RegisterLogCallback(UsclibInterpreter * AInterpreter, C
 int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_ENTER ACallback, void * AUser)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->registerOnEnter(ACallback, AUser);
@@ -153,8 +159,7 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter * AI
 int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_INVOKE ACallback, void * AUser)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->registerOnInvoke(ACallback, AUser);
@@ -169,8 +174,7 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter * A
 int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_EVENT ACallback, const bool bAtomOrJson, void * AUser)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->registerOnEvent(ACallback, bAtomOrJson, AUser);
@@ -182,11 +186,25 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter * AI
 	return ERROR_USCLIB_REGISTER_CALLBACK;
 }
 
+int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_NOTIFY ACallback, void * AUser)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+		AScxmlBase->registerOnStopped(ACallback, AUser);
+
+		return USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_REGISTER_CALLBACK;
+}
+
 int USCXMLCLIBAPI usclib_StartInterpreter(UsclibInterpreter * AInterpreter, const char * chScxmlTextOrFile, const bool bIsText)
 {	
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->start(chScxmlTextOrFile, bIsText);
@@ -201,8 +219,7 @@ int USCXMLCLIBAPI usclib_StartInterpreter(UsclibInterpreter * AInterpreter, cons
 int USCXMLCLIBAPI usclib_PauseInterpreter(UsclibInterpreter * AInterpreter)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->pause();
@@ -217,8 +234,7 @@ int USCXMLCLIBAPI usclib_PauseInterpreter(UsclibInterpreter * AInterpreter)
 int USCXMLCLIBAPI usclib_ResumeInterpreter(UsclibInterpreter * AInterpreter)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->resume();
@@ -233,8 +249,7 @@ int USCXMLCLIBAPI usclib_ResumeInterpreter(UsclibInterpreter * AInterpreter)
 int USCXMLCLIBAPI usclib_StopInterpreter(UsclibInterpreter * AInterpreter)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->close();
@@ -244,6 +259,38 @@ int USCXMLCLIBAPI usclib_StopInterpreter(UsclibInterpreter * AInterpreter)
 	CATCH_USCLIB_ALL;
 
 	return ERROR_USCLIB_STOP_INTERPRETER;
+}
+
+int USCXMLCLIBAPI usclib_WaitForInterpreterStopped(UsclibInterpreter * AInterpreter)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+		AScxmlBase->waitForStopped();
+
+		return USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+	return ERROR_USCLIB_WAIT_FOR_STOPPED;
+}
+
+int USCXMLCLIBAPI usclib_IsInterpreterInState(const UsclibInterpreter * AInterpreter, const char* chState, bool * bInState)
+{
+	try {
+		CHECK_INTERPRETER_VALID(const_cast<UsclibInterpreter *>(AInterpreter));
+
+		const ScxmlBase *AScxmlBase = reinterpret_cast<const ScxmlBase*>(AInterpreter);
+		auto state = AScxmlBase->getState();
+		if (state != USCXML_UNDEF && AScxmlBase->getImpl())
+			*bInState = AScxmlBase->getImpl()->isInState(chState);
+		else
+			*bInState = false;
+
+		return USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+	return ERROR_USCLIB_IS_IN_STATE;
 }
 
 int USCXMLCLIBAPI usclib_InitHTTP(const int iHttpListenPort, const int iHttpWebsocketPort)
@@ -279,8 +326,7 @@ int USCXMLCLIBAPI usclib_Log(const unsigned int nSeverity, const char *chMessage
 int USCXMLCLIBAPI usclib_TriggerEvent(UsclibInterpreter * AInterpreter, const char * chEvent)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 
@@ -299,8 +345,7 @@ int USCXMLCLIBAPI usclib_TriggerEvent(UsclibInterpreter * AInterpreter, const ch
 
 int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const int Data) {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 
@@ -323,8 +368,7 @@ int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const 
 int USCXMLCLIBAPI usclib_TriggerStringEvent(UsclibInterpreter *AInterpreter, const char * chEvent, const char * Data)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 
@@ -347,8 +391,7 @@ int USCXMLCLIBAPI usclib_TriggerStringEvent(UsclibInterpreter *AInterpreter, con
 int USCXMLCLIBAPI usclib_TriggerDoubleEvent(UsclibInterpreter *AInterpreter, const char * chEvent, const double Data)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 
@@ -371,8 +414,7 @@ int USCXMLCLIBAPI usclib_TriggerDoubleEvent(UsclibInterpreter *AInterpreter, con
 int USCXMLCLIBAPI usclib_TriggerJsonEvent(UsclibInterpreter * AInterpreter, const char * chEvent, const char * JsonData)
 {
 	try {
-		if (!AInterpreter)
-			throw std::exception("Interpreter==NULL!");
+		CHECK_INTERPRETER_VALID(AInterpreter);
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 

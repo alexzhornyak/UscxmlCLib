@@ -119,6 +119,11 @@ public:
 		_OnInterpreterLogUser = AUser;
 	}
 
+	inline void registerOnStopped(OnInterpreterNotify AOnInterpreterStopped, void *AUser) {
+		_OnInterpreterStopped = AOnInterpreterStopped;
+		_OnInterpreterStoppedUser = AUser;
+	}
+
 	inline void registerOnEnter(OnInterpreterEnter AOnInterpreterEnter, void *AUser) {
 		_OnInterpreterEnter = AOnInterpreterEnter;
 		_OnInterpreterEnterUser = AUser;
@@ -139,6 +144,7 @@ public:
 	void pause();
 	void resume();
 	void close();
+	void waitForStopped(void);
 
 	uscxml::Data getGlobal(const std::string &sScxmlName, const std::string &sPath) const;
 	void setGlobal(const std::string &sScxmlName, const std::string &sPath, const uscxml::Data &data, const int iType);
@@ -151,9 +157,12 @@ public:
 	inline const AppTimer &getAppTimer() const { return _AppTimer; }
 
 	void receive(const Event& event);
-	inline InterpreterImpl *getImpl() const { return _interpreter_ptr ? _interpreter_ptr->getImpl().get() : nullptr; }
+	
+	inline InterpreterImpl *getImpl() const { return _interpreter ? _interpreter.getImpl().get() : nullptr; }
 
-	bool useRemoteMonitor(void) const { return _remotePort != SCXML_DISABLE_REMOTE_MONITOR; }	
+	inline bool useRemoteMonitor(void) const { return _remotePort != SCXML_DISABLE_REMOTE_MONITOR; }	
+
+	InterpreterState getState() const;
 
 protected:
 
@@ -164,6 +173,7 @@ protected:
 	const std::string _remoteHost;
 	const int _remotePort;
 	const std::set<TScxmlMsgType> _Messages;
+	const bool _httpEnabled;
 
 	/* CALLBACKS */
 	friend class SequenceCheckingMonitor;
@@ -181,6 +191,9 @@ protected:
 	void *_OnInterpreterEventUser = nullptr;
 	bool _OnInterpreterEventAtomOrJson = false;
 
+	OnInterpreterNotify _OnInterpreterStopped = nullptr;
+	void *_OnInterpreterStoppedUser = nullptr;
+
 	/* Pausable Queue */
 	friend class PausableDelayedEventQueue;
 
@@ -197,14 +210,13 @@ private:
 	std::string _scxmlurl = "";
 
 	InterpreterState _state = InterpreterState::USCXML_UNDEF;
-	std::unique_ptr<Interpreter> _interpreter_ptr;	
+	Interpreter _interpreter;	
 	
 	std::unique_ptr<FactoryDynamic> _factory_ptr;	
 	std::unique_ptr<SequenceCheckingMonitor> _monitor_ptr;
 	ActionLanguage _lang;	
-	std::unique_ptr<std::thread> _interpreter_thread_ptr;
+	std::thread * _interpreter_thread_ptr = nullptr; // do not use smart pointer! AccessViolation in C++ Builder
 
-	InterpreterState getState();
 	void setState(InterpreterState AState);
 	void blockingQueue();	
 	

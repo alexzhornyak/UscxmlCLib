@@ -17,22 +17,26 @@ void issueLocationsForXML(uscxml::Interpreter *interpreter) {
 	for (std::list<InterpreterIssue>::iterator issueIter = issues.begin(); issueIter != issues.end(); issueIter++) {
 		switch (issueIter->severity) {
 		case InterpreterIssue::USCXML_ISSUE_FATAL: {
-			CLOG(ERROR) << *issueIter;
+			std::stringstream ss;
+			ss << *issueIter;
+			LOG(interpreter->getLogger(), USCXML_ERROR) << ss.str();
 			bIsError = true;
 		} break;
 		case InterpreterIssue::USCXML_ISSUE_INFO: {
-			CLOG(INFO) << *issueIter;
+			std::stringstream ss;
+			ss << *issueIter;
+			LOG(interpreter->getLogger(), USCXML_INFO) << ss.str();
 		} break;
 		case InterpreterIssue::USCXML_ISSUE_WARNING: {
-			CLOG(WARN) << *issueIter;
+			std::stringstream ss;
+			ss << *issueIter;
+			LOG(interpreter->getLogger(), USCXML_WARN) << ss.str();
 		} break;
 		}
 	}
 	if (bIsError)
-		throw std::runtime_error("Fatal SCXML error! Application will be terminated!");
+		throw std::runtime_error("Fatal SCXML error! Interpreter stopped!");
 }
-
-
 
 ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs,
 	const std::set<TScxmlMsgType> &AMonitorMessages,
@@ -41,8 +45,32 @@ ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs,
 	const int iRemotePort/* = SCXML_BASE_DISABLE_REMOTE_MONITOR*/, const bool bCheckIssues/* = true*/,
 	const bool bHttpEnabled/* = false*/):
 	_remotePort(iRemotePort), _remoteHost(sRemoteHost), _monitor(bMonitor),
-	_CMDArgs(ACMDArgs), _validate(bCheckIssues), _Messages(AMonitorMessages) {
+	_CMDArgs(ACMDArgs), _validate(bCheckIssues), _Messages(AMonitorMessages), _httpEnabled(bHttpEnabled) {
 	
+}
+
+ScxmlBase::~ScxmlBase(void)
+{
+	close();
+}
+
+void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {	
+	/// possible deadlock - think in future for replace!
+	waitForStopped();
+	
+	if (bIsText) {
+		_interpreter = Interpreter::fromXML(sTextOrFile, "");
+	}
+	else {
+		_scxmlurl = sTextOrFile;
+		_interpreter = Interpreter::fromURL(_scxmlurl);
+	}
+
+	if (!_interpreter)
+		throw std::exception("Interpreter initialization FAILED!");
+
+	setState(USCXML_UNDEF);
+
 	_factory_ptr.reset(new FactoryDynamic(&Factory::getInstance()));
 
 	std::set<Factory::PluginType> FACTORY_TYPES{
@@ -52,65 +80,55 @@ ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs,
 		Factory::PluginType::ptUSCXMLInvoker
 	};
 
-	if (bHttpEnabled) {
+	if (_httpEnabled) {
 		FACTORY_TYPES.insert(Factory::PluginType::ptBasicHTTPIOProcessor);
 	}
 
 	_factory_ptr->registerCustomPlugins(FACTORY_TYPES);
-
+	
 	_factory_ptr->registerExecutableContent(std::shared_ptr<SetValueExecutableContent>(new SetValueExecutableContent(this)));
-	_factory_ptr->registerIOProcessor(std::shared_ptr<GlobalDataIOProcessor>(new GlobalDataIOProcessor(this->getImpl(),	this)));
-
+	_factory_ptr->registerIOProcessor(std::shared_ptr<GlobalDataIOProcessor>(new GlobalDataIOProcessor(this)));
 	_factory_ptr->registerDataModel(std::shared_ptr<LuaDataModelEx>(new LuaDataModelEx(this)));
-}
 
-ScxmlBase::~ScxmlBase(void)
-{
-	close();
-}
-
-void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {	
-	if (bIsText) {
-		_interpreter_ptr.reset(new Interpreter(Interpreter::fromXML(sTextOrFile, "")));
-	}
-	else {
-		_scxmlurl = sTextOrFile;
-		_interpreter_ptr.reset(new Interpreter(Interpreter::fromURL(_scxmlurl)));
-	}
-
-	_interpreter_ptr->setFactory(_factory_ptr.get());
-
-	_queue_ptr.reset(new PausableDelayedEventQueue(_interpreter_ptr->getImpl().get(),this));
+	_interpreter.setFactory(_factory_ptr.get());
+	
+	_queue_ptr.reset(new PausableDelayedEventQueue(_interpreter.getImpl().get(),this));
 	_lang.delayQueue = DelayedEventQueue(_queue_ptr);
 	/* intercept native logger in any case */
 	_lang.logger = std::shared_ptr<LoggerImpl>(new CLibLogger(_monitor, this, _OnInterpreterLog, _OnInterpreterLogUser));
-	_interpreter_ptr->setActionLanguage(_lang);
+	_interpreter.setActionLanguage(_lang);
 
 	if (_validate) {
-		issueLocationsForXML(_interpreter_ptr.get());
+		issueLocationsForXML(&_interpreter);
 	}
 
 	if (_monitor) {
 		_monitor_ptr.reset(new SequenceCheckingMonitor(this, _lang.logger));
 		_monitor_ptr->copyToInvokers(true);
-		_interpreter_ptr->addMonitor(_monitor_ptr.get());
+		_interpreter.addMonitor(_monitor_ptr.get());
 	}
 
 	_AppTimer.start();
 
-	_interpreter_thread_ptr.reset(new std::thread(std::bind(&ScxmlBase::blockingQueue, this)));
+	_interpreter_thread_ptr = new std::thread(std::bind(&ScxmlBase::blockingQueue, this));
 }
 
 void ScxmlBase::close()
 {
 	std::set<InterpreterState> ANonCancelledStates{ USCXML_UNDEF, USCXML_INSTANTIATED, USCXML_CANCELLED, USCXML_FINISHED };
-	if (_interpreter_ptr && ANonCancelledStates.find(this->getState())== ANonCancelledStates.end()) {
-		_interpreter_ptr->cancel();
+	if (_interpreter && ANonCancelledStates.find(this->getState())== ANonCancelledStates.end()) {
+		_interpreter.cancel();
 	}
 
+	waitForStopped();
+}
+
+void ScxmlBase::waitForStopped(void)
+{
 	if (_interpreter_thread_ptr) {
 		_interpreter_thread_ptr->join();
-		_interpreter_thread_ptr.reset();
+		delete _interpreter_thread_ptr;
+		_interpreter_thread_ptr = nullptr;		
 	}
 }
 
@@ -153,8 +171,8 @@ void ScxmlBase::resume()
 }
 
 void ScxmlBase::receive(const Event& event) {
-	if (_interpreter_ptr)
-		_interpreter_ptr->receive(event);
+	if (_interpreter)
+		_interpreter.receive(event);
 }
 
 const std::string ScxmlBase::getExeDir() const
@@ -163,20 +181,27 @@ const std::string ScxmlBase::getExeDir() const
 }
 
 void ScxmlBase::blockingQueue()
-{	
+{		
 	InterpreterState state_temp = InterpreterState::USCXML_UNDEF;
-	do {
-		try {
-			state_temp = _interpreter_ptr->step();
-		}
-		catch (uscxml::ErrorEvent &e) {
-			CLOG(ERROR) << "BlockingQueue> " << e;
-		}
-		setState(state_temp);
-	} while (state_temp != InterpreterState::USCXML_FINISHED && state_temp != InterpreterState::USCXML_CANCELLED);
+
+	try {
+
+		do {
+			state_temp = _interpreter.step();
+			setState(state_temp);
+		} while (state_temp != InterpreterState::USCXML_FINISHED && state_temp != InterpreterState::USCXML_CANCELLED);
+
+	}
+	catch (uscxml::ErrorEvent &e) {
+		LOG(_interpreter.getLogger(), USCXML_ERROR) << "InterpreterEventsQueue> " << e;
+	}
+		
+	if (_OnInterpreterStopped) {
+		_OnInterpreterStopped(this, _OnInterpreterStoppedUser);
+	}
 }
 
-uscxml::InterpreterState ScxmlBase::getState()
+uscxml::InterpreterState ScxmlBase::getState() const
 {
 	std::shared_lock< std::shared_mutex > lock(_mutex);
 	return _state;

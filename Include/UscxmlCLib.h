@@ -17,6 +17,8 @@
 #define ERROR_USCLIB_PAUSE_INTERPRETER			8
 #define ERROR_USCLIB_RESUME_INTERPRETER			9
 #define ERROR_USCLIB_STOP_INTERPRETER			10
+#define ERROR_USCLIB_WAIT_FOR_STOPPED			11
+#define ERROR_USCLIB_IS_IN_STATE				12
 #define ERROR_USCLIB_TRIGGER					100
 #define ERROR_USCLIB_TRIGGER_INT				101
 #define ERROR_USCLIB_TRIGGER_DBL				102
@@ -75,6 +77,8 @@ P.S. call 'usclib_GetDefaultInterpreterOptions' to retrieve default values
 
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_LOG)
 	(const UsclibInterpreter *AInterpreter, const int nSeverity, const char *chMessage, void *AUser);
+typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_NOTIFY)
+	(const UsclibInterpreter *AInterpreter, void *AUser);
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_ENTER)
 	(const UsclibInterpreter *AInterpreter, const char *chStateMachineName, const char *chStateName, const bool bEnter, void *AUser);
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_INVOKE)
@@ -100,11 +104,15 @@ extern "C" int USCXMLCLIBAPI usclib_RegisterLogCallback(UsclibInterpreter *AInte
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_ENTER ACallback, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_INVOKE ACallback, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_EVENT ACallback, const bool bAtomOrJson, void *AUser);
+extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_NOTIFY ACallback, void *AUser);
 
 extern "C" int USCXMLCLIBAPI usclib_StartInterpreter(UsclibInterpreter *AInterpreter, const char *chScxmlTextOrFile, const bool bIsText);
 extern "C" int USCXMLCLIBAPI usclib_PauseInterpreter(UsclibInterpreter *AInterpreter);
 extern "C" int USCXMLCLIBAPI usclib_ResumeInterpreter(UsclibInterpreter *AInterpreter);
 extern "C" int USCXMLCLIBAPI usclib_StopInterpreter(UsclibInterpreter *AInterpreter);
+extern "C" int USCXMLCLIBAPI usclib_WaitForInterpreterStopped(UsclibInterpreter *AInterpreter);
+
+extern "C" int USCXMLCLIBAPI usclib_IsInterpreterInState(const UsclibInterpreter *AInterpreter, const char* chState, bool *bInState);
 
 extern "C" int USCXMLCLIBAPI usclib_TriggerEvent(UsclibInterpreter *AInterpreter, const char *chEvent);
 extern "C" int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const int Data);

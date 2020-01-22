@@ -13,7 +13,7 @@ namespace uscxml {
 	class GlobalDataIOProcessor : public SCXMLIOProcessor {
 		ScxmlBase *_ScxmlBase;
 	public:
-		GlobalDataIOProcessor(IOProcessorCallbacks* callbacks, ScxmlBase *AScxmlBase);
+		GlobalDataIOProcessor(ScxmlBase *AScxmlBase);
 
 		virtual std::list<std::string> getNames() override {
 			std::list<std::string> names;
@@ -34,7 +34,7 @@ namespace uscxml {
 
 		virtual std::shared_ptr<ExecutableContentImpl> create(uscxml::InterpreterImpl* interpreter) override {
 			std::shared_ptr<SetValueExecutableContent> content_ptr(new SetValueExecutableContent(_ScxmlBase));
-			content_ptr->_interpreter_ptr = interpreter;
+			content_ptr->setInterpreter(interpreter);
 			return content_ptr;
 		}
 
@@ -46,8 +46,6 @@ namespace uscxml {
 
 		virtual bool processChildren() override { return false; };
 
-	protected:
-		uscxml::InterpreterImpl* _interpreter_ptr;
 	};
 
 	class FactoryDynamic : public uscxml::Factory {

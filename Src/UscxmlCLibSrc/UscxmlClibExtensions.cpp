@@ -8,8 +8,7 @@
 namespace uscxml {
 
 	/* GlobalDataIOProcessor */
-	GlobalDataIOProcessor::GlobalDataIOProcessor(IOProcessorCallbacks* callbacks, ScxmlBase *AScxmlBase) : _ScxmlBase(AScxmlBase) {
-		_callbacks = callbacks;
+	GlobalDataIOProcessor::GlobalDataIOProcessor(ScxmlBase *AScxmlBase) : _ScxmlBase(AScxmlBase) {
 	}
 
 	void GlobalDataIOProcessor::eventFromSCXML(const std::string& target, const Event& event) {
@@ -18,7 +17,7 @@ namespace uscxml {
 	}
 
 	std::shared_ptr<IOProcessorImpl> GlobalDataIOProcessor::create(IOProcessorCallbacks* callbacks) {
-		std::shared_ptr<GlobalDataIOProcessor> ioProc(new GlobalDataIOProcessor(callbacks, _ScxmlBase));
+		std::shared_ptr<GlobalDataIOProcessor> ioProc(new GlobalDataIOProcessor(_ScxmlBase));
 		ioProc->_callbacks = callbacks;
 		return ioProc;
 	}
@@ -38,8 +37,8 @@ namespace uscxml {
 		if (HAS_ATTR(node, kXMLCharTarget)) {
 			s_target = ATTR(node, kXMLCharTarget);
 		}
-		else if (HAS_ATTR(node, kXMLCharTargetExpr)) {
-			s_target = _interpreter_ptr->evalAsData(ATTR(node, kXMLCharTargetExpr)).atom;
+		else if (HAS_ATTR(node, kXMLCharTargetExpr)) {			
+			s_target = _interpreter->evalAsData(ATTR(node, kXMLCharTargetExpr)).atom;
 		}
 		else {
 			ERROR_EXECUTION_THROW2("<setvalue> element has neither 'target' nor 'targetexpr' attribute", node);
@@ -50,7 +49,7 @@ namespace uscxml {
 			s_type = ATTR(node, kXMLCharType);
 		}
 		else if (HAS_ATTR(node, kXMLCharTypeExpr)) {
-			s_type = _interpreter_ptr->evalAsData(ATTR(node, X("targetexpr"))).atom;
+			s_type = _interpreter->evalAsData(ATTR(node, X("targetexpr"))).atom;
 		}
 
 		std::string s_path = "";
@@ -58,7 +57,7 @@ namespace uscxml {
 			s_path = ATTR(node, X("path"));
 		}
 		else if (HAS_ATTR(node, X("pathexpr"))) {
-			s_path = _interpreter_ptr->evalAsData(ATTR(node, X("pathexpr"))).atom;
+			s_path = _interpreter->evalAsData(ATTR(node, X("pathexpr"))).atom;
 		}
 
 		if (HAS_ATTR(node, X("value"))) {
@@ -66,7 +65,7 @@ namespace uscxml {
 			_ScxmlBase->setGlobal(s_target, s_path, data, std::stoi(s_type));
 		}
 		else if (HAS_ATTR(node, X("valueexpr"))) {
-			uscxml::Data data = _interpreter_ptr->evalAsData(ATTR(node, X("valueexpr")));
+			uscxml::Data data = _interpreter->evalAsData(ATTR(node, X("valueexpr")));
 			_ScxmlBase->setGlobal(s_target, s_path, data, std::stoi(s_type));
 		}
 		else {
