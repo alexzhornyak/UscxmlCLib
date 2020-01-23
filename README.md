@@ -71,7 +71,19 @@ if (USCLIB_SUCCESS != usclib_CloseInterpreter(g_Interpreter))
 ### Output
 ![image](https://user-images.githubusercontent.com/18611095/73010483-2ee4b100-3e1b-11ea-86cc-ad7be2ba65e1.png)
 
-## [Examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples)
-Ready to use examples after installation
+## Examples
+After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/README.md#installation) you are able to start [ready-to-use examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples): [HelloWorld](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/HelloWorld), [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/TrafficLight) etc.
+
+### Licensing
+UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause License but it include external components with their own licensies
+
+| Project | License | Comment |
+|---------|---------|---------|
+| [uSCXML](https://github.com/tklab-tud/uscxml) | [Simplified BSD license](https://github.com/tklab-tud/uscxml/blob/master/License.md) | This wrapper mostly based on [uSCXML original SDK](https://github.com/tklab-tud/uscxml) |
+| [libcurl](https://curl.haxx.se/libcurl/) | [MIT/X derivate](https://curl.haxx.se/docs/copyright.html) | Used in uSCXML to fetch remote content |
+| [Xerces-C++](https://xerces.apache.org/xerces-c/) | [Apache v2](http://www.apache.org/licenses/LICENSE-2.0.html) | XML parser and DOM implementation |
+| [libevent](http://libevent.org) | [3-clause BSD](http://libevent.org/LICENSE.txt) | Delayed event queues |
+| [uriparser](http://uriparser.sourceforge.net) | [New BSD](https://sourceforge.net/p/uriparser/git/ci/master/tree/COPYING) | Referring and resolving URIs |
+| [Lua](https://www.lua.org/) | [Under the terms of the MIT license](https://www.lua.org/license.html) | Lua Data Model |
 
 
