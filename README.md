@@ -74,7 +74,7 @@ if (USCLIB_SUCCESS != usclib_CloseInterpreter(g_Interpreter))
 ## Examples
 After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/README.md#installation) you are able to start [ready-to-use examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples): [HelloWorld](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/HelloWorld), [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/TrafficLight) etc.
 
-### Licensing
+## Licensing
 UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause License but it include external components with their own licensies
 
 | Project | License | Comment |
@@ -86,4 +86,12 @@ UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause Licen
 | [uriparser](http://uriparser.sourceforge.net) | [New BSD](https://sourceforge.net/p/uriparser/git/ci/master/tree/COPYING) | Referring and resolving URIs |
 | [Lua](https://www.lua.org/) | [Under the terms of the MIT license](https://www.lua.org/license.html) | Lua Data Model |
 
+## SCXML Standard Compliance
+Almost the same as uSCXML original with some restrictions. Run W3C [testing application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/TesterW3C) to get more info
 
+## DataModels supported
+NULL
+
+Lua
+
+Luavia (Lua datamodel with some non-standard extensions to increase state chart performance)
