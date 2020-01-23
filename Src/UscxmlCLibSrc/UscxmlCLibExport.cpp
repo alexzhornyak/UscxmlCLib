@@ -82,21 +82,29 @@ int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 
 		if (AInterpreterOptions) {
 			std::set<TScxmlMsgType> AOptionsMsgs;
-			std::bitset<smttMAXSIZE> ABitMsgs(AInterpreterOptions->MonitorMsgTypes);
-			for (std::size_t n = 0; n < ABitMsgs.count(); n++) {
+			std::bitset<smttMAXSIZE+1> ABitMsgs(AInterpreterOptions->MonitorMsgTypes);
+			for (std::size_t n = 0; n < ABitMsgs.size(); n++) {
 				if (ABitMsgs[n]) {
-					AOptionsMsgs.insert(TScxmlMsgType(n+1));
+					AOptionsMsgs.insert(TScxmlMsgType(n));
 				}
 			}
 			AMonitorMessages.swap(AOptionsMsgs);
 		}
 
+		std::stringstream ss;
+		for (auto it = AMonitorMessages.begin(); it != AMonitorMessages.end(); ++it) {
+			if (it != AMonitorMessages.begin())
+				ss << "|";
+			ss << ScxmlMsgTypeToString(*it);
+		}
+		CLOG(DEBUG) << "Monitor Types [" << ss.str() << "]";
+
 		ScxmlBase *AScxmlBase = new ScxmlBase(AVecString, 
 			AMonitorMessages,
-			AInterpreterOptions ? AInterpreterOptions->LocalMonitor : true,
+			AInterpreterOptions ? AInterpreterOptions->Monitor : true,
 			AInterpreterOptions ? AInterpreterOptions->RemoteMonitorHost : "127.0.0.1",
 			AInterpreterOptions? AInterpreterOptions->RemoteMonitorPort : SCXML_DISABLE_REMOTE_MONITOR,
-			AInterpreterOptions ? AInterpreterOptions->CheckIssues : true, 
+			AInterpreterOptions ? AInterpreterOptions->CheckIssues : false, 
 			g_HTTP_ENABLED);
 
 		*AInterpreter = AScxmlBase;
@@ -141,7 +149,7 @@ int USCXMLCLIBAPI usclib_RegisterLogCallback(UsclibInterpreter * AInterpreter, C
 	return ERROR_USCLIB_REGISTER_CALLBACK;
 }
 
-int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_ENTER ACallback, void * AUser)
+int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_ENTER_EXIT ACallback, void * AUser)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
@@ -307,11 +315,11 @@ int USCXMLCLIBAPI usclib_InitHTTP(const int iHttpListenPort, const int iHttpWebs
 
 int USCXMLCLIBAPI usclib_GetDefaultInterpreterOptions(UsclibInterpreterOptions * AInterpreterOptions)
 {
-	AInterpreterOptions->LocalMonitor = true;
+	AInterpreterOptions->Monitor = true;
 	AInterpreterOptions->RemoteMonitorHost = "127.0.0.1";
 	AInterpreterOptions->RemoteMonitorPort = SCXML_DISABLE_REMOTE_MONITOR;
 	AInterpreterOptions->CheckIssues = true;
-	AInterpreterOptions->MonitorMsgTypes = USCLIB_SCXML_EDITOR_MSG_TYPES;
+	AInterpreterOptions->MonitorMsgTypes = USCLIB_SCXMLEDITOR_MSG_TYPES;
 
 	return USCLIB_SUCCESS;
 }

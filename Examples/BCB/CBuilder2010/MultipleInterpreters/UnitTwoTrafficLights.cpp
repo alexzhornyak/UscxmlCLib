@@ -145,6 +145,7 @@ void __fastcall TFormTrafficLight::CheckNightMode2Click(TObject *Sender) {
 void __fastcall TFormTrafficLight::CheckPause1Click(TObject *Sender) {
 	if (g_Interpreter) {
 		CheckPause1->Checked ? usclib_PauseInterpreter(g_Interpreter) : usclib_ResumeInterpreter(g_Interpreter);
+		CheckNightMode->Enabled = !CheckPause1->Checked;
 	}
 }
 
@@ -152,6 +153,7 @@ void __fastcall TFormTrafficLight::CheckPause1Click(TObject *Sender) {
 void __fastcall TFormTrafficLight::CheckPause2Click(TObject *Sender) {
 	if (g_Interpreter2) {
 		CheckPause2->Checked ? usclib_PauseInterpreter(g_Interpreter2) : usclib_ResumeInterpreter(g_Interpreter2);
+		CheckNightMode2->Enabled = !CheckPause2->Checked;
 	}
 }
 //---------------------------------------------------------------------------

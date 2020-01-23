@@ -49,6 +49,7 @@ static std::string ScxmlMsgTypeToString(const TScxmlMsgType AType) {
 	case smttBeforeTakingTransition: return "smttBeforeTakingTransition";
 	case smttAfterTakingTransition: return "smttAfterTakingTransition";
 	case smttStep: return "smttStep";
+	case smttMAXSIZE: return "smttMAXSIZE";
 	}
 	return "smttUnknown";
 }
@@ -109,7 +110,7 @@ public:
 		const bool bMonitor = true,
 		const std::string sRemoteHost = "127.0.0.1",
 		const int iRemotePort = SCXML_DISABLE_REMOTE_MONITOR,
-		const bool bCheckIssues = true,
+		const bool bCheckIssues = false,
 		const bool bHttpEnabled = false);
 
 	~ScxmlBase(void);
@@ -124,9 +125,9 @@ public:
 		_OnInterpreterStoppedUser = AUser;
 	}
 
-	inline void registerOnEnter(OnInterpreterEnter AOnInterpreterEnter, void *AUser) {
-		_OnInterpreterEnter = AOnInterpreterEnter;
-		_OnInterpreterEnterUser = AUser;
+	inline void registerOnEnter(OnInterpreterEnterExit AOnInterpreterEnter, void *AUser) {
+		_OnInterpreterEnterExit = AOnInterpreterEnter;
+		_OnInterpreterEnterExitUser = AUser;
 	}
 
 	inline void registerOnInvoke(OnInterpreterInvoke AOnInterpreterInvoke, void *AUser) {
@@ -181,8 +182,8 @@ protected:
 	OnInterpreterLog _OnInterpreterLog = nullptr;
 	void *_OnInterpreterLogUser = nullptr;
 
-	OnInterpreterEnter _OnInterpreterEnter = nullptr;
-	void *_OnInterpreterEnterUser = nullptr;
+	OnInterpreterEnterExit _OnInterpreterEnterExit = nullptr;
+	void *_OnInterpreterEnterExitUser = nullptr;
 
 	OnInterpreterInvoke _OnInterpreterInvoke = nullptr;
 	void *_OnInterpreterInvokeUser = nullptr;

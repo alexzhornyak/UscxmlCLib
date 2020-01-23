@@ -52,12 +52,15 @@
 #define USCLIB_MSG_AFTER_TAKINGTRANSITION		8192
 #define USCLIB_MSG_MAXSIZE						16384
 
-#define USCLIB_SCXML_EDITOR_MSG_TYPES			(USCLIB_MSG_BEFORE_ENTER | USCLIB_MSG_BEFORE_EXIT | USCLIB_MSG_BEFORE_TAKINGTRANSITION | USCLIB_MSG_BEFORE_INVOKE | USCLIB_MSG_BEFORE_UNINVOKE)
+#define USCLIB_SCXMLEDITOR_MSG_TYPES			(USCLIB_MSG_BEFORE_ENTER | USCLIB_MSG_BEFORE_EXIT | USCLIB_MSG_BEFORE_TAKINGTRANSITION | USCLIB_MSG_BEFORE_INVOKE | USCLIB_MSG_BEFORE_UNINVOKE)
+
+#define USCLIB_DISABLE_REMOTE_MONITOR				0
+#define USCLIB_DEFAULT_SCXMLEDITOR_MONITOR		11005
 
 typedef void	UsclibInterpreter;
 
 typedef struct {	
-	bool LocalMonitor;
+	bool Monitor;
 	const char *RemoteMonitorHost;
 	int  RemoteMonitorPort;
 	bool CheckIssues;
@@ -66,7 +69,7 @@ typedef struct {
 
 /* 
 if (UsclibInterpreterOptions *AInterpreterOptions == NULL) then
-	LocalMonitor =			true
+	Monitor =			true
 	RemoteMonitorHost =		127.0.0.1
 	RemoteMonitorPort =		0 (disabled)
 	CheckIssues =			true
@@ -79,7 +82,7 @@ typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_LOG)
 	(const UsclibInterpreter *AInterpreter, const int nSeverity, const char *chMessage, void *AUser);
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_NOTIFY)
 	(const UsclibInterpreter *AInterpreter, void *AUser);
-typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_ENTER)
+typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_ENTER_EXIT)
 	(const UsclibInterpreter *AInterpreter, const char *chStateMachineName, const char *chStateName, const bool bEnter, void *AUser);
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_INVOKE)
 	(const UsclibInterpreter *AInterpreter, const char *chStateMachineName, const char *chInvokeName, const bool bInvoke, void *AUser);
@@ -101,7 +104,7 @@ extern "C" int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpr
 extern "C" int USCXMLCLIBAPI usclib_CloseInterpreter(UsclibInterpreter *AInterpreter);
 
 extern "C" int USCXMLCLIBAPI usclib_RegisterLogCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_LOG ACallback, void *AUser);
-extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_ENTER ACallback, void *AUser);
+extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_ENTER_EXIT ACallback, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_INVOKE ACallback, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_EVENT ACallback, const bool bAtomOrJson, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_NOTIFY ACallback, void *AUser);

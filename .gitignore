@@ -10,3 +10,4 @@ __history
 *.db
 *.filters
 *.vcxproj.user
+*.opendb

@@ -1,6 +1,6 @@
 object FormTrafficLight: TFormTrafficLight
-  Left = 0
-  Top = 0
+  Left = 800
+  Top = 200
   Caption = 'TrafficLight'
   ClientHeight = 375
   ClientWidth = 350
@@ -11,6 +11,7 @@ object FormTrafficLight: TFormTrafficLight
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poScreenCenter
   PixelsPerInch = 96
   TextHeight = 13
   object Shape4: TShape

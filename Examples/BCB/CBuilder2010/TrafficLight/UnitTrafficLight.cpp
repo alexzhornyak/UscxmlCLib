@@ -56,7 +56,16 @@ __fastcall TFormTrafficLight::TFormTrafficLight(TComponent* Owner) : TForm(Owner
 		const AnsiString sScxmlFile = TPath::Combine(ExtractFilePath(Application->ExeName),
 			"..\\..\\..\\..\\StateCharts\\TrafficLight.scxml");
 
-		if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, 0))
+		const AnsiString sLogFile = ChangeFileExt(Application->ExeName, ".scxml.log");
+		if (USCLIB_SUCCESS != usclib_InitLogging(sLogFile.c_str()))
+			throw Exception(usclib_GetLastError());
+
+        // enable RemoteMonitor
+		UsclibInterpreterOptions AInterpreterOptions;
+		usclib_GetDefaultInterpreterOptions(&AInterpreterOptions);
+		AInterpreterOptions.RemoteMonitorPort = USCLIB_DEFAULT_SCXMLEDITOR_MONITOR;
+
+		if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, &AInterpreterOptions))
 			throw Exception(usclib_GetLastError());
 
 		usclib_RegisterInterpreterEnterCallback(g_Interpreter, OnInterpreterEnterExit, this);

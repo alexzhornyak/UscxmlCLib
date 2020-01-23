@@ -17,6 +17,7 @@
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
+
 TFormW3C *FormW3C = NULL;
 
 UsclibInterpreter *g_Interpreter = NULL;
@@ -25,7 +26,7 @@ UsclibInterpreter *g_Interpreter = NULL;
 #define SCXML_TREE_NODE_ERROR		2
 #define SCXML_TREE_NODE_STARTED		4
 #define SCXML_TREE_NODE_UNKNOWN		6
-#define SCXML_TREE_NODE_WARNING		8
+#define SCXML_TREE_NODE_MANUAL		8
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -41,7 +42,7 @@ protected:
 
 		if (!bUserCancelled) {
 			if (FNode->Data) {
-				FNode->ImageIndex = SCXML_TREE_NODE_WARNING;
+				FNode->ImageIndex = SCXML_TREE_NODE_MANUAL;
 			}
 			else {
 				FNode->ImageIndex = FPass ? SCXML_TREE_NODE_SUCCESS : SCXML_TREE_NODE_ERROR;
@@ -50,7 +51,34 @@ protected:
 			FNode->MakeVisible();
 
 			FormW3C->ProgressBar1->Position = FNode->Index + 1;
-			FormW3C->InterpreterStartNext();
+
+			if (FormW3C->ProgressBar1->Position == FormW3C->ProgressBar1->Max) {
+				FormW3C->BtnStop->Click();
+
+				int iPassed = 0;
+				int iManual = 0;
+				int iNotPassed = 0;
+				for (int i = 0; i < FormW3C->TreeTests->Items->Count; i++) {
+					switch(FormW3C->TreeTests->Items->Item[i]->ImageIndex) {
+					case SCXML_TREE_NODE_SUCCESS:
+						iPassed++;
+						break;
+					case SCXML_TREE_NODE_MANUAL:
+						iManual++;
+						break;
+					default:
+						iNotPassed++;
+					}
+				}
+
+				FormW3C->Log("All " + UnicodeString(FormW3C->ProgressBar1->Max) + " tests were completed!", USCLIB_LOG_INFO);
+				FormW3C->Log("Passed: " + UnicodeString(iPassed), USCLIB_LOG_INFO);
+				FormW3C->Log("Manual or restricted: " + UnicodeString(iManual), USCLIB_LOG_INFO);
+				FormW3C->Log("Failed: " + UnicodeString(iNotPassed), iNotPassed ? USCLIB_LOG_ERROR : USCLIB_LOG_INFO);
+			}
+			else {
+				FormW3C->InterpreterStartNext();
+			}
 		}
 
 	}
