@@ -90,8 +90,6 @@ UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause Licen
 Almost the same as uSCXML original with some restrictions. Run W3C [testing application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/TesterW3C) to get more info
 
 ## DataModels supported
-NULL
-
-Lua
-
-Luavia (Lua datamodel with some non-standard extensions to increase state chart performance)
+1. NULL
+2. Lua
+3. Luavia (Lua datamodel with some non-standard extensions to increase state chart performance)
