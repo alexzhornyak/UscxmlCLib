@@ -1,8 +1,6 @@
 #pragma once
 
 #include <chrono>
-
-#include <thread>
 #include <mutex>
 #include <shared_mutex>
 

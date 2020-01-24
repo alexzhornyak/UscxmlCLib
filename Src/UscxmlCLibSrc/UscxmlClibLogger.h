@@ -1,5 +1,6 @@
 #pragma once
 
+/* boost */
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
@@ -7,8 +8,11 @@
 #include <boost/log/utility/setup/from_stream.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
 #include <boost/log/utility/setup/filter_parser.hpp>
+
+/* uscxml */
 #include "uscxml/interpreter/LoggingImpl.h"
 
+/* app */
 #include "boost_logger_severity.h"
 #include "UscxmlCLibCallbacks.h"
 

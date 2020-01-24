@@ -114,7 +114,9 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /y "$(TargetDir)$(TargetName).lib" "$(SolutionDir)..\lib\$(TargetName).lib"
-copy /y "$(TargetPath)" "$(SolutionDir)..\Bin\$(TargetFileName)"</Command>
+copy /y "$(TargetPath)" "$(SolutionDir)..\Bin\$(TargetFileName)"
+
+call g:\SDK\create_USCXMCLLib_borland_lib.cmd</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -172,9 +174,6 @@ copy /y "$(TargetPath)" "$(SolutionDir)..\Bin\$(TargetFileName)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Include\UscxmlCLib.h" />
     <ClInclude Include="AppTimer.h" />

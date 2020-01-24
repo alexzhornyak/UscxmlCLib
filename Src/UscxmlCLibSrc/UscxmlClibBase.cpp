@@ -43,11 +43,24 @@ ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs,
 	const bool bMonitor/* = true*/,
 	const std::string sRemoteHost/* = "127.0.0.1"*/,
 	const int iRemotePort/* = SCXML_BASE_DISABLE_REMOTE_MONITOR*/,
-	const bool bCheckIssues/* = false*/,
-	const bool bHttpEnabled/* = false*/):
+	const bool bCheckIssues/* = true*/,
+	const bool bTerminateOnIssues/* = true*/,
+	const bool bHttpEnabled/* = false*/,
+	const bool bGlobalDataDisabled/* = false*/):
 	_remotePort(iRemotePort), _remoteHost(sRemoteHost), _monitor(bMonitor),
-	_CMDArgs(ACMDArgs), _validate(bCheckIssues), _Messages(AMonitorMessages), _httpEnabled(bHttpEnabled) {
+	_CMDArgs(ACMDArgs), _validate(bCheckIssues), _terminateOnFatalIssues(bTerminateOnIssues),
+	_Messages(AMonitorMessages),
+	_httpEnabled(bHttpEnabled), _globalDataDisabled(bGlobalDataDisabled) {
 	
+	if (bMonitor) {
+		std::stringstream ss;
+		for (auto it = AMonitorMessages.begin(); it != AMonitorMessages.end(); ++it) {
+			if (it != AMonitorMessages.begin())
+				ss << "|";
+			ss << ScxmlMsgTypeToString(*it);
+		}
+		CLOG(DEBUG) << "Monitor:[" << ss.str() << "]";
+	}	
 }
 
 ScxmlBase::~ScxmlBase(void)
@@ -56,7 +69,8 @@ ScxmlBase::~ScxmlBase(void)
 }
 
 void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {	
-	/// possible deadlock - think in future for replace!
+	/// possible deadlock - think in future how to replace,
+	/// but we should be sure that previous interpreter stopped!
 	waitForStopped();
 	
 	if (bIsText) {
@@ -256,64 +270,62 @@ uscxml::Data ScxmlBase::getGlobal(const std::string & sScxmlName, const std::str
 
 void ScxmlBase::setGlobal(const std::string & sScxmlName, const std::string &sPath, const uscxml::Data &data, const int iType)
 {
-	std::unique_lock<std::shared_mutex> lock(_mutex);
-	
-	// в контролы отправляем только по простому пути
-	if (sPath.empty()) {
-		_global_data_storage[sScxmlName] = data;
-	}
-	else {
-		uscxml::Data *dataptr = nullptr;
-		auto it_global = _global_data_storage.find(sScxmlName);
-		if (it_global != _global_data_storage.end()) {
-			dataptr = &it_global->second;
+	{
+		std::unique_lock<std::shared_mutex> lock(_mutex);
+
+		if (sPath.empty()) {
+			_global_data_storage[sScxmlName] = data;
 		}
 		else {
-			_global_data_storage.insert(std::make_pair(sScxmlName, uscxml::Data()));
-			dataptr = &_global_data_storage[sScxmlName];
-		}
-
-		using namespace boost::algorithm;
-
-		std::vector<std::string> VecStr;
-		split(VecStr, sPath, is_any_of("."));
-
-		for (const auto &elem : VecStr) {
-			if (isNumeric(elem.c_str(), 10)) {
-				const int elemIndex = std::stoi(elem);
-				auto it_array_elem = dataptr->array.find(elemIndex);
-				if (it_array_elem != dataptr->array.end()) {
-					dataptr = &it_array_elem->second;
-				}
-				else {
-					dataptr->array.insert(std::make_pair(elemIndex, uscxml::Data()));
-					dataptr = &dataptr->array[elemIndex];
-				}
+			uscxml::Data *dataptr = nullptr;
+			auto it_global = _global_data_storage.find(sScxmlName);
+			if (it_global != _global_data_storage.end()) {
+				dataptr = &it_global->second;
 			}
 			else {
-				auto it_compaund_elem = dataptr->compound.find(elem);
-				if (it_compaund_elem != dataptr->compound.end()) {
-					dataptr = &it_compaund_elem->second;
+				_global_data_storage.insert(std::make_pair(sScxmlName, uscxml::Data()));
+				dataptr = &_global_data_storage[sScxmlName];
+			}
+
+			using namespace boost::algorithm;
+
+			std::vector<std::string> VecStr;
+			split(VecStr, sPath, is_any_of("."));
+
+			for (const auto &elem : VecStr) {
+				if (isNumeric(elem.c_str(), 10)) {
+					const int elemIndex = std::stoi(elem);
+					auto it_array_elem = dataptr->array.find(elemIndex);
+					if (it_array_elem != dataptr->array.end()) {
+						dataptr = &it_array_elem->second;
+					}
+					else {
+						dataptr->array.insert(std::make_pair(elemIndex, uscxml::Data()));
+						dataptr = &dataptr->array[elemIndex];
+					}
 				}
-				else
-				{
-					dataptr->compound.insert(std::make_pair(elem, uscxml::Data()));
-					dataptr = &dataptr->compound[elem];
+				else {
+					auto it_compaund_elem = dataptr->compound.find(elem);
+					if (it_compaund_elem != dataptr->compound.end()) {
+						dataptr = &it_compaund_elem->second;
+					}
+					else
+					{
+						dataptr->compound.insert(std::make_pair(elem, uscxml::Data()));
+						dataptr = &dataptr->compound[elem];
+					}
 				}
 			}
+
+			*dataptr = data;
 		}
-
-		*dataptr = data;
 	}
-
-	switch (iType) {
-	case SCXMLTASK_TO_GLOBAL_ONLY:
-		CLOG(INFO) << "Set LOCAL [" << sScxmlName << "] with data:" << data;
-	break;	
-	default:
-		CLOG(ERROR) << "Type [" << iType << "] is not supported!";
+	
+	if (_OnInterpreterGlobalDataChange) {
+		_OnInterpreterGlobalDataChange(this, sScxmlName.c_str(), sPath.c_str(),
+			_OnInterpreterGlobalDataChangeAtomOrJson ? data.atom.c_str() : data.asJSON().c_str(),
+			_OnInterpreterGlobalDataChangeAtomOrJson, iType, _OnInterpreterGlobalDataChangeUser);
 	}
-
 }
 
 std::string ScxmlBase::getProjectPath() const

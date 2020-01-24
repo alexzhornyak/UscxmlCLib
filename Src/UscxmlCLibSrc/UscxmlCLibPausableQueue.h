@@ -1,7 +1,5 @@
 #pragma once
 
-#include <list>
-
 #include "uscxml/Interpreter.h"
 #include "uscxml/interpreter/BasicEventQueue.h"
 #include "uscxml/interpreter/BasicDelayedEventQueue.h"

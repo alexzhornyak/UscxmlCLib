@@ -33,7 +33,7 @@ public:
 	}
 };
 
-void __stdcall OnInterpreterLogCallback(const UsclibInterpreter *AInterpreter, const int nSeverity, const char *chMessage, void *AUser) {
+void __stdcall OnGlobalLogCallback(const int nSeverity, const char *chMessage, void *AUser) {
 	(new TLogNotify(chMessage))->Notify();
 }
 
@@ -51,7 +51,7 @@ static const char *g_chScxml = //
 //--------------------------- TFormHelloWorld -------------------------------
 //---------------------------------------------------------------------------
 __fastcall TFormHelloWorld::TFormHelloWorld(TComponent* Owner) : TForm(Owner) {
-
+	usclib_InitLogging(NULL, OnGlobalLogCallback, NULL);
 }
 
 //---------------------------------------------------------------------------
@@ -64,8 +64,6 @@ void __fastcall TFormHelloWorld::BtnStartClick(TObject *Sender) {
 	try {
 		if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, 0))
 			throw Exception(usclib_GetLastError());
-
-		usclib_RegisterLogCallback(g_Interpreter, OnInterpreterLogCallback, NULL);
 
 		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, g_chScxml, true))
 			throw Exception(usclib_GetLastError());

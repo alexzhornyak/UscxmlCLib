@@ -79,6 +79,7 @@
 #define ERROR_USCLIB_STOP_INTERPRETER			10
 #define ERROR_USCLIB_WAIT_FOR_STOPPED			11
 #define ERROR_USCLIB_IS_IN_STATE				12
+#define ERROR_USCLIB_GLOBAL_DATA				13
 #define ERROR_USCLIB_TRIGGER					100
 #define ERROR_USCLIB_TRIGGER_INT				101
 #define ERROR_USCLIB_TRIGGER_DBL				102
@@ -119,25 +120,18 @@
 
 typedef void	UsclibInterpreter;
 
-typedef struct {	
-	bool Monitor;
-	const char *RemoteMonitorHost;
-	int  RemoteMonitorPort;
-	bool CheckIssues;
-	int  MonitorMsgTypes;
+typedef struct {						/* DEFAULT */	
+	bool Monitor;						// true							
+	const char *RemoteMonitorHost;		// 127.0.0.1
+	int  RemoteMonitorPort;				// 0 (disabled)
+	bool CheckIssues;					// true						
+	bool TerminateOnIssues;				// true
+	int  MonitorMsgTypes;				// USCLIB_SCXML_EDITOR_MSG_TYPES
+	bool DisableGlobalData;				// false
 } UsclibInterpreterOptions;
 
-/* 
-if (UsclibInterpreterOptions *AInterpreterOptions == NULL) then
-	Monitor =			true
-	RemoteMonitorHost =		127.0.0.1
-	RemoteMonitorPort =		0 (disabled)
-	CheckIssues =			true
-	MonitorMsgTypes =		USCLIB_SCXML_EDITOR_MSG_TYPES
-
-P.S. call 'usclib_GetDefaultInterpreterOptions' to retrieve default values
-*/
-
+typedef void(__stdcall *CALLBACK_USCLIB_GLOBAL_LOG)
+	(const int nSeverity, const char *chMessage, void *AUser);
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_LOG)
 	(const UsclibInterpreter *AInterpreter, const int nSeverity, const char *chMessage, void *AUser);
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_NOTIFY)
@@ -147,7 +141,14 @@ typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_ENTER_EXIT)
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_INVOKE)
 	(const UsclibInterpreter *AInterpreter, const char *chStateMachineName, const char *chInvokeName, const bool bInvoke, void *AUser);
 typedef void(__stdcall *CALLBACK_USCLIB_INTERPRETER_EVENT)
-	(const UsclibInterpreter *AInterpreter, const char *chStateMachineName, const char *chEventName, const char *chAtomOrJsonData, const bool bIsAtomOrJson, void *AUser);
+	(const UsclibInterpreter *AInterpreter, const char *chStateMachineName, const char *chEventName,
+		const char *chAtomOrJsonData, const bool bIsAtomOrJson, void *AUser);
+typedef void(__stdcall *CALLBACK_USCLIB_GET_GLOBAL_DATA)
+	(const UsclibInterpreter *AInterpreter, const char *chName, const char *chPath,
+		const char *chAtomOrJsonData, const bool bIsAtomOrJson, void *AUser);
+typedef void(__stdcall *CALLBACK_USCLIB_GLOBAL_DATA_CHANGE)
+	(const UsclibInterpreter *AInterpreter, const char *chName, const char *chPath,
+		const char *chAtomOrJsonData, const bool bIsAtomOrJson, const int iType, void *AUser);
 
 /* 'BasicHTTP' support (called once at the begin of App) */
 extern "C" int USCXMLCLIBAPI usclib_InitHTTP(const int iHttpListenPort, const int iHttpWebsocketPort);
@@ -156,18 +157,22 @@ extern "C" const char USCXMLCLIBAPI * usclib_GetLastError(void);
 extern "C" int USCXMLCLIBAPI usclib_GetDefaultInterpreterOptions(UsclibInterpreterOptions *AInterpreterOptions);
 
 /* Logging */
-extern "C" int USCXMLCLIBAPI usclib_InitLogging(const char *chLogFileName); // called once at the beginning
+extern "C" int USCXMLCLIBAPI usclib_InitLogging(const char *chLogFileName, CALLBACK_USCLIB_GLOBAL_LOG ACallback, void *AUser); // called once at the beginning
 extern "C" int USCXMLCLIBAPI usclib_Log(const unsigned int nSeverity, const char *chMessage);
 
+/* Intepreter */
 extern "C" int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 	const char **chCMD, const int nCMD,	const UsclibInterpreterOptions *AInterpreterOptions);
 extern "C" int USCXMLCLIBAPI usclib_CloseInterpreter(UsclibInterpreter *AInterpreter);
 
-extern "C" int USCXMLCLIBAPI usclib_RegisterLogCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_LOG ACallback, void *AUser);
+/* Registration must be complete before interpreter was started */
+extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterLogCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_LOG ACallback, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_ENTER_EXIT ACallback, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_INVOKE ACallback, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_EVENT ACallback, const bool bAtomOrJson, void *AUser);
 extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter *AInterpreter, CALLBACK_USCLIB_INTERPRETER_NOTIFY ACallback, void *AUser);
+extern "C" int USCXMLCLIBAPI usclib_RegisterInterpreterGlobalDataChangeCallback(UsclibInterpreter *AInterpreter, const bool bIsAtomOrJson, CALLBACK_USCLIB_GLOBAL_DATA_CHANGE ACallback, void *AUser);
+
 
 extern "C" int USCXMLCLIBAPI usclib_StartInterpreter(UsclibInterpreter *AInterpreter, const char *chScxmlTextOrFile, const bool bIsText);
 extern "C" int USCXMLCLIBAPI usclib_PauseInterpreter(UsclibInterpreter *AInterpreter);
@@ -178,10 +183,26 @@ extern "C" int USCXMLCLIBAPI usclib_WaitForInterpreterStopped(UsclibInterpreter 
 extern "C" int USCXMLCLIBAPI usclib_IsInterpreterInState(const UsclibInterpreter *AInterpreter, const char* chState, bool *bInState);
 
 extern "C" int USCXMLCLIBAPI usclib_TriggerEvent(UsclibInterpreter *AInterpreter, const char *chEvent);
-extern "C" int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const int Data);
-extern "C" int USCXMLCLIBAPI usclib_TriggerStringEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const char *Data);
-extern "C" int USCXMLCLIBAPI usclib_TriggerDoubleEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const double Data);
-extern "C" int USCXMLCLIBAPI usclib_TriggerJsonEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const char *JsonData);
+extern "C" int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const int iData);
+extern "C" int USCXMLCLIBAPI usclib_TriggerStringEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const char *chData);
+extern "C" int USCXMLCLIBAPI usclib_TriggerDoubleEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const double dData);
+extern "C" int USCXMLCLIBAPI usclib_TriggerJsonEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const char *chJsonData);
+
+/* Non-Standard extensions */
+/* Global Data can be accessed from any invoked intepreter */
+extern "C" int USCXMLCLIBAPI usclib_GetGlobalData(UsclibInterpreter *AInterpreter,
+	const char *chName, const char *chPath, CALLBACK_USCLIB_GET_GLOBAL_DATA ACallback, void *AUser);
+extern "C" int USCXMLCLIBAPI usclib_GetGlobalJsonData(UsclibInterpreter *AInterpreter,
+	const char *chName, const char *chPath, CALLBACK_USCLIB_GET_GLOBAL_DATA ACallback, void *AUser);
+extern "C" int USCXMLCLIBAPI usclib_SetGlobalIntData(UsclibInterpreter *AInterpreter,
+	const char *chName, const char *chPath, const int iData, const int iType);
+extern "C" int USCXMLCLIBAPI usclib_SetGlobalDoubleData(UsclibInterpreter *AInterpreter,
+	const char *chName, const char *chPath, const double dData, const int iType);
+extern "C" int USCXMLCLIBAPI usclib_SetGlobalStringData(UsclibInterpreter *AInterpreter,
+	const char *chName, const char *chPath, const char *chData, const int iType);
+extern "C" int USCXMLCLIBAPI usclib_SetGlobalJsonData(UsclibInterpreter *AInterpreter,
+	const char *chName, const char *chPath, const char *chJsonData, const int iType);
+
 
 /* 'Factory Cleanup' (called once at the end of App) */
 extern "C" int USCXMLCLIBAPI usclib_GlobalCleanup(void);

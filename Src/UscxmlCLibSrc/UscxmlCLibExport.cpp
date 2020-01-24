@@ -5,6 +5,8 @@
 #include <memory>
 #include <bitset>
 
+#include <boost/log/sinks/sync_frontend.hpp>
+
 #include "uscxml/server/HTTPServer.h"
 
 #include "UscxmlCLibBase.h"
@@ -23,6 +25,9 @@ bool g_HTTP_ENABLED = false;
 
 std::set<UsclibInterpreter *> g_INTERPRETERS;
 
+CALLBACK_USCLIB_GLOBAL_LOG g_GLOBAL_LOG_CALLBACK = nullptr;
+void *g_GLOBAL_LOG_CALLBACK_USER = nullptr;
+
 #define	CATCH_USCLIB_ALL		catch (uscxml::ErrorEvent &e) {	\
 									std::stringstream ss;	\
 									ss << e;	\
@@ -38,7 +43,7 @@ const char USCXMLCLIBAPI * usclib_GetLastError(void) {
 	return g_LAST_ERROR.c_str();
 }
 
-int USCXMLCLIBAPI usclib_InitLogging(const char * chLogFileName)
+int USCXMLCLIBAPI usclib_InitLogging(const char * chLogFileName, CALLBACK_USCLIB_GLOBAL_LOG ACallback, void *AUser)
 {
 	try
 	{
@@ -46,13 +51,41 @@ int USCXMLCLIBAPI usclib_InitLogging(const char * chLogFileName)
 		boost::log::register_simple_filter_factory<SysLogSeverity>(boost::log::aux::default_attribute_names::severity());
 
 		boost::log::settings setts;
-		setts["Sinks.File.Destination"] = "TextFile";
-		setts["Sinks.File.FileName"] = chLogFileName;
-		setts["Sinks.File.AutoFlush"] = true;
-		setts["Sinks.File.Format"] = "[%TimeStamp%; %Severity%]: %Message%";
+		
+		if (chLogFileName) {
+			setts["Sinks.File.Destination"] = "TextFile";
+			setts["Sinks.File.FileName"] = chLogFileName;
+			setts["Sinks.File.AutoFlush"] = true;
+			setts["Sinks.File.Format"] = "[%TimeStamp%; %Severity%]: %Message%";
+		}		
 
 		// Read the settings and initialize logging library
 		boost::log::init_from_settings(setts);
+
+		if (ACallback) {
+			g_GLOBAL_LOG_CALLBACK = ACallback;
+			g_GLOBAL_LOG_CALLBACK_USER = AUser;
+
+			namespace sinks = boost::log::sinks;
+
+			struct Sink : public sinks::basic_formatted_sink_backend<char, sinks::synchronized_feeding> {
+				void consume(const boost::log::record_view& rec, const std::string& str) {
+					if (g_GLOBAL_LOG_CALLBACK) {
+						auto severity = rec.attribute_values()[boost::log::aux::default_attribute_names::severity()].extract<SysLogSeverity>();
+						if (severity) {
+							g_GLOBAL_LOG_CALLBACK(static_cast<int>(severity.get()), str.c_str(), g_GLOBAL_LOG_CALLBACK_USER);
+						}
+						else {
+							g_GLOBAL_LOG_CALLBACK(static_cast<int>(SysLogSeverity::slDEBUG), str.c_str(), g_GLOBAL_LOG_CALLBACK_USER);
+						}
+					}
+				}
+			};
+			
+			typedef sinks::synchronous_sink<Sink> sink_t;
+			boost::shared_ptr<sink_t> sink(new sink_t());
+			boost::log::core::get()->add_sink(sink);
+		}		
 
 		boost::log::add_common_attributes();
 
@@ -91,21 +124,15 @@ int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 			AMonitorMessages.swap(AOptionsMsgs);
 		}
 
-		std::stringstream ss;
-		for (auto it = AMonitorMessages.begin(); it != AMonitorMessages.end(); ++it) {
-			if (it != AMonitorMessages.begin())
-				ss << "|";
-			ss << ScxmlMsgTypeToString(*it);
-		}
-		CLOG(DEBUG) << "Monitor Types [" << ss.str() << "]";
-
 		ScxmlBase *AScxmlBase = new ScxmlBase(AVecString, 
 			AMonitorMessages,
 			AInterpreterOptions ? AInterpreterOptions->Monitor : true,
 			AInterpreterOptions ? AInterpreterOptions->RemoteMonitorHost : "127.0.0.1",
 			AInterpreterOptions? AInterpreterOptions->RemoteMonitorPort : SCXML_DISABLE_REMOTE_MONITOR,
-			AInterpreterOptions ? AInterpreterOptions->CheckIssues : false, 
-			g_HTTP_ENABLED);
+			AInterpreterOptions ? AInterpreterOptions->CheckIssues : true,
+			AInterpreterOptions ? AInterpreterOptions->TerminateOnIssues : true,
+			g_HTTP_ENABLED,
+			AInterpreterOptions ? AInterpreterOptions->DisableGlobalData : false);
 
 		*AInterpreter = AScxmlBase;
 		g_INTERPRETERS.insert(*AInterpreter);
@@ -134,7 +161,7 @@ int USCXMLCLIBAPI usclib_CloseInterpreter(UsclibInterpreter *AInterpreter) {
 	return ERROR_USCLIB_CLOSE_INTERPRETER;
 }
 
-int USCXMLCLIBAPI usclib_RegisterLogCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_LOG ACallback, void *AUser)
+int USCXMLCLIBAPI usclib_RegisterInterpreterLogCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_LOG ACallback, void *AUser)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
@@ -201,6 +228,21 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter * 
 
 		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
 		AScxmlBase->registerOnStopped(ACallback, AUser);
+
+		return USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_REGISTER_CALLBACK;
+}
+
+int USCXMLCLIBAPI usclib_RegisterInterpreterGlobalDataChangeCallback(UsclibInterpreter * AInterpreter, const bool bIsAtomOrJson, CALLBACK_USCLIB_GLOBAL_DATA_CHANGE ACallback, void * AUser)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+		AScxmlBase->registerOnGlobalDataChange(ACallback, bIsAtomOrJson, AUser);
 
 		return USCLIB_SUCCESS;
 	}
@@ -319,7 +361,9 @@ int USCXMLCLIBAPI usclib_GetDefaultInterpreterOptions(UsclibInterpreterOptions *
 	AInterpreterOptions->RemoteMonitorHost = "127.0.0.1";
 	AInterpreterOptions->RemoteMonitorPort = SCXML_DISABLE_REMOTE_MONITOR;
 	AInterpreterOptions->CheckIssues = true;
+	AInterpreterOptions->TerminateOnIssues = true;
 	AInterpreterOptions->MonitorMsgTypes = USCLIB_SCXMLEDITOR_MSG_TYPES;
+	AInterpreterOptions->DisableGlobalData = false;
 
 	return USCLIB_SUCCESS;
 }
@@ -351,7 +395,7 @@ int USCXMLCLIBAPI usclib_TriggerEvent(UsclibInterpreter * AInterpreter, const ch
 	return ERROR_USCLIB_TRIGGER_INT;
 }
 
-int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const int Data) {
+int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const char *chEvent, const int iData) {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
 
@@ -360,10 +404,12 @@ int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const 
 		uscxml::Event AEvent;
 		AEvent.eventType = uscxml::Event::EXTERNAL;
 		AEvent.name = chEvent;
-		AEvent.data.atom = std::to_string(Data);
+		AEvent.data.atom = std::to_string(iData);
 		AEvent.data.type = uscxml::Data::INTERPRETED;
 
-		AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
+		if (AScxmlBase->isGlobalDataEnabled())
+			AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
+		
 		AScxmlBase->receive(AEvent);
 
 		return  USCLIB_SUCCESS;
@@ -373,7 +419,7 @@ int USCXMLCLIBAPI usclib_TriggerIntEvent(UsclibInterpreter *AInterpreter, const 
 	return ERROR_USCLIB_TRIGGER_INT;
 }
 
-int USCXMLCLIBAPI usclib_TriggerStringEvent(UsclibInterpreter *AInterpreter, const char * chEvent, const char * Data)
+int USCXMLCLIBAPI usclib_TriggerDoubleEvent(UsclibInterpreter *AInterpreter, const char * chEvent, const double dData)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
@@ -383,33 +429,11 @@ int USCXMLCLIBAPI usclib_TriggerStringEvent(UsclibInterpreter *AInterpreter, con
 		uscxml::Event AEvent;
 		AEvent.eventType = uscxml::Event::EXTERNAL;
 		AEvent.name = chEvent;
-		AEvent.data.atom = Data ? Data : "";
-		AEvent.data.type = uscxml::Data::VERBATIM;
-
-		AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
-		AScxmlBase->receive(AEvent);
-
-		return  USCLIB_SUCCESS;
-	}
-	CATCH_USCLIB_ALL;
-
-	return  ERROR_USCLIB_TRIGGER_STR;
-}
-
-int USCXMLCLIBAPI usclib_TriggerDoubleEvent(UsclibInterpreter *AInterpreter, const char * chEvent, const double Data)
-{
-	try {
-		CHECK_INTERPRETER_VALID(AInterpreter);
-
-		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
-
-		uscxml::Event AEvent;
-		AEvent.eventType = uscxml::Event::EXTERNAL;
-		AEvent.name = chEvent;
-		AEvent.data.atom = std::to_string(Data);
+		AEvent.data.atom = std::to_string(dData);
 		AEvent.data.type = uscxml::Data::INTERPRETED;
 
-		AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
+		if (AScxmlBase->isGlobalDataEnabled())
+			AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
 		AScxmlBase->receive(AEvent);
 
 		return  USCLIB_SUCCESS;
@@ -419,7 +443,7 @@ int USCXMLCLIBAPI usclib_TriggerDoubleEvent(UsclibInterpreter *AInterpreter, con
 	return  ERROR_USCLIB_TRIGGER_DBL;
 }
 
-int USCXMLCLIBAPI usclib_TriggerJsonEvent(UsclibInterpreter * AInterpreter, const char * chEvent, const char * JsonData)
+int USCXMLCLIBAPI usclib_TriggerStringEvent(UsclibInterpreter *AInterpreter, const char * chEvent, const char * chData)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
@@ -429,9 +453,35 @@ int USCXMLCLIBAPI usclib_TriggerJsonEvent(UsclibInterpreter * AInterpreter, cons
 		uscxml::Event AEvent;
 		AEvent.eventType = uscxml::Event::EXTERNAL;
 		AEvent.name = chEvent;
-		AEvent.data = uscxml::Data::fromJSON(JsonData);
+		AEvent.data.atom = chData ? chData : "";
+		AEvent.data.type = uscxml::Data::VERBATIM;
 
-		AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
+		if (AScxmlBase->isGlobalDataEnabled())
+			AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
+		AScxmlBase->receive(AEvent);
+
+		return  USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return  ERROR_USCLIB_TRIGGER_STR;
+}
+
+
+int USCXMLCLIBAPI usclib_TriggerJsonEvent(UsclibInterpreter * AInterpreter, const char * chEvent, const char * chJsonData)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+
+		uscxml::Event AEvent;
+		AEvent.eventType = uscxml::Event::EXTERNAL;
+		AEvent.name = chEvent;
+		AEvent.data = uscxml::Data::fromJSON(chJsonData);
+
+		if (AScxmlBase->isGlobalDataEnabled())
+			AScxmlBase->setGlobal(AEvent.name, "", AEvent.data, 0);
 		AScxmlBase->receive(AEvent);
 
 		return  USCLIB_SUCCESS;
@@ -439,6 +489,130 @@ int USCXMLCLIBAPI usclib_TriggerJsonEvent(UsclibInterpreter * AInterpreter, cons
 	CATCH_USCLIB_ALL;
 
 	return ERROR_USCLIB_TRIGGER_JSON;
+}
+
+int USCXMLCLIBAPI usclib_GetGlobalData(UsclibInterpreter *AInterpreter,
+	const char *chName, const char *chPath, CALLBACK_USCLIB_GET_GLOBAL_DATA ACallback, void *AUser)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		if (!ACallback)
+			throw std::exception("No need to return data for empty callback!");
+
+		if (!chName)
+			throw std::exception("'GetGlobalData' require non-empty name!");
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+
+		auto data = AScxmlBase->getGlobal(chName, chPath ? chPath : "");
+		ACallback(AInterpreter, chName, chPath, data.atom.c_str(), true/*atom data*/, AUser);
+		
+		return  USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_GLOBAL_DATA;
+}
+
+int USCXMLCLIBAPI usclib_GetGlobalJsonData(UsclibInterpreter * AInterpreter, const char * chName, const char * chPath, CALLBACK_USCLIB_GET_GLOBAL_DATA ACallback, void * AUser)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		if (!ACallback)
+			throw std::exception("No need to return data for empty callback!");
+
+		if (!chName)
+			throw std::exception("'GetGlobalJsonData' require non-empty name!");
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+
+		auto data = AScxmlBase->getGlobal(chName, chPath ? chPath : "");
+		ACallback(AInterpreter, chName, chPath, data.asJSON().c_str(), false /*json data*/, AUser);
+
+		return  USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_GLOBAL_DATA;
+}
+
+int USCXMLCLIBAPI usclib_SetGlobalIntData(UsclibInterpreter * AInterpreter, const char * chName, const char * chPath, const int iData, const int iType)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		if (!chName)
+			throw std::exception("'usclib_SetGlobalStringData' require non-empty name!");
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+
+		AScxmlBase->setGlobal(chName, chPath ? chPath : "", uscxml::Data(iData, uscxml::Data::INTERPRETED), iType);
+
+		return  USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_GLOBAL_DATA;
+}
+
+int USCXMLCLIBAPI usclib_SetGlobalDoubleData(UsclibInterpreter * AInterpreter, const char * chName, const char * chPath, const double dData, const int iType)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		if (!chName)
+			throw std::exception("'usclib_SetGlobalStringData' require non-empty name!");
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+
+		AScxmlBase->setGlobal(chName, chPath ? chPath : "", uscxml::Data(dData, uscxml::Data::INTERPRETED), iType);
+
+		return  USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_GLOBAL_DATA;
+}
+
+int USCXMLCLIBAPI usclib_SetGlobalStringData(UsclibInterpreter * AInterpreter, const char * chName, const char * chPath, const char * chData, const int iType)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		if (!chName)
+			throw std::exception("'usclib_SetGlobalStringData' require non-empty name!");
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+
+		AScxmlBase->setGlobal(chName, chPath ? chPath : "", chData ? uscxml::Data(chData, uscxml::Data::VERBATIM) : uscxml::Data(), iType);
+
+		return  USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_GLOBAL_DATA;
+}
+
+int USCXMLCLIBAPI usclib_SetGlobalJsonData(UsclibInterpreter * AInterpreter,
+	const char * chName, const char * chPath, const char * chJsonData, const int iType)
+{
+	try {
+		CHECK_INTERPRETER_VALID(AInterpreter);
+
+		if (!chName)
+			throw std::exception("'usclib_SetGlobalJsonData' require non-empty name!");
+
+		ScxmlBase *AScxmlBase = reinterpret_cast<ScxmlBase*>(AInterpreter);
+
+		AScxmlBase->setGlobal(chName, chPath ? chPath : "", chJsonData ? uscxml::Data::fromJSON(chJsonData) : uscxml::Data(), iType);
+
+		return  USCLIB_SUCCESS;
+	}
+	CATCH_USCLIB_ALL;
+
+	return ERROR_USCLIB_GLOBAL_DATA;
 }
 
 int USCXMLCLIBAPI usclib_GlobalCleanup(void)

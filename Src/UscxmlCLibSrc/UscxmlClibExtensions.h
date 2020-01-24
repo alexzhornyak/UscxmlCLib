@@ -1,7 +1,6 @@
 #pragma once
 
 #include "uscxml/Interpreter.h"
-//#include "uscxml/interpreter/InterpreterMonitor.h"
 #include "uscxml/interpreter/InterpreterImpl.h"
 #include "uscxml/plugins/ioprocessor/scxml/SCXMLIOProcessor.h"
 #include "uscxml/plugins/ExecutableContentImpl.h"
@@ -48,10 +47,9 @@ namespace uscxml {
 
 	};
 
+	/* destructor is hidden in base 'Factory' class, so making this trick */
 	class FactoryDynamic : public uscxml::Factory {
 	public:
 		FactoryDynamic(uscxml::Factory* parentFactory) :uscxml::Factory(parentFactory) {}
-
-		void freeFactory(void) { delete this; }
 	};
 }

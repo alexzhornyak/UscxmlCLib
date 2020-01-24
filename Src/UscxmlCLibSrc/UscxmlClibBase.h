@@ -2,10 +2,10 @@
 
 #include <set>
 #include <unordered_map>
-
-#include <boost/asio.hpp>
 #include <thread>
 #include <shared_mutex>
+
+#include <boost/asio.hpp>
 
 #include "uscxml/util/DOM.h"
 #include "uscxml/Interpreter.h"
@@ -93,6 +93,7 @@ public:
 
 	virtual void beforeProcessingEvent(Interpreter& interpreter, const uscxml::Event& event) override;
 
+	// sends message to remote listener
 	void sendMessage(const std::string &sInterpreterName, const std::string &sMsg, const TScxmlMsgType AType);
 };
 
@@ -110,8 +111,10 @@ public:
 		const bool bMonitor = true,
 		const std::string sRemoteHost = "127.0.0.1",
 		const int iRemotePort = SCXML_DISABLE_REMOTE_MONITOR,
-		const bool bCheckIssues = false,
-		const bool bHttpEnabled = false);
+		const bool bCheckIssues = true,
+		const bool bTerminateOnIssues = true,
+		const bool bHttpEnabled = false,
+		const bool bGlobalDataDisabled = false);
 
 	~ScxmlBase(void);
 
@@ -140,30 +143,35 @@ public:
 		_OnInterpreterEventUser = AUser;
 		_OnInterpreterEventAtomOrJson = bAtomOrJson;
 	}
+
+	inline void registerOnGlobalDataChange(OnInterpreterGlobalDataChange AOnInterpreterGlobalDataChange, const bool bAtomOrJson, void *AUser) {
+		_OnInterpreterGlobalDataChange = AOnInterpreterGlobalDataChange;
+		_OnInterpreterGlobalDataChangeUser = AUser;
+		_OnInterpreterGlobalDataChangeAtomOrJson = bAtomOrJson;
+	}
 	
 	void start(const std::string &sTextOrFile, const bool bIsText);	
 	void pause();
 	void resume();
 	void close();
 	void waitForStopped(void);
-
-	uscxml::Data getGlobal(const std::string &sScxmlName, const std::string &sPath) const;
-	void setGlobal(const std::string &sScxmlName, const std::string &sPath, const uscxml::Data &data, const int iType);
-
-	std::string getProjectPath() const;
-	inline const std::string &getProjectFileName() const { return _scxmlurl; }
-	inline const std::vector<std::string> &getCMDArgs() { return _CMDArgs; }
-	const std::string getExeDir() const;
-
-	inline const AppTimer &getAppTimer() const { return _AppTimer; }
-
 	void receive(const Event& event);
-	
-	inline InterpreterImpl *getImpl() const { return _interpreter ? _interpreter.getImpl().get() : nullptr; }
 
 	inline bool useRemoteMonitor(void) const { return _remotePort != SCXML_DISABLE_REMOTE_MONITOR; }	
 
 	InterpreterState getState() const;
+	inline InterpreterImpl *getImpl() const { return _interpreter ? _interpreter.getImpl().get() : nullptr; }
+
+	/* methods for extended Lua DataModel (luavia) */
+	uscxml::Data getGlobal(const std::string &sScxmlName, const std::string &sPath) const;
+	void setGlobal(const std::string &sScxmlName, const std::string &sPath, const uscxml::Data &data, const int iType);
+	bool isGlobalDataEnabled() const { return !_globalDataDisabled; }
+
+	const std::string getExeDir() const;
+	std::string getProjectPath() const;
+	inline const std::string &getProjectFileName() const { return _scxmlurl; }
+	inline const std::vector<std::string> &getCMDArgs() { return _CMDArgs; }	
+	inline const AppTimer &getAppTimer() const { return _AppTimer; }
 
 protected:
 
@@ -171,10 +179,12 @@ protected:
 	const std::vector<std::string> _CMDArgs;
 	const bool _monitor;
 	const bool _validate;
+	const bool _terminateOnFatalIssues;
 	const std::string _remoteHost;
 	const int _remotePort;
 	const std::set<TScxmlMsgType> _Messages;
 	const bool _httpEnabled;
+	const bool _globalDataDisabled;
 
 	/* CALLBACKS */
 	friend class SequenceCheckingMonitor;
@@ -195,6 +205,10 @@ protected:
 	OnInterpreterNotify _OnInterpreterStopped = nullptr;
 	void *_OnInterpreterStoppedUser = nullptr;
 
+	OnInterpreterGlobalDataChange _OnInterpreterGlobalDataChange = nullptr;
+	void *_OnInterpreterGlobalDataChangeUser = nullptr;
+	bool _OnInterpreterGlobalDataChangeAtomOrJson = false;
+
 	/* Pausable Queue */
 	friend class PausableDelayedEventQueue;
 
@@ -206,16 +220,16 @@ private:
 	ScxmlBase(const ScxmlBase&) = delete;
 	ScxmlBase& operator=(const ScxmlBase&) = delete;
 	
-	mutable std::shared_mutex _mutex;
-	
 	std::string _scxmlurl = "";
+
+	/* for global data exchange */
+	mutable std::shared_mutex _mutex;
 
 	InterpreterState _state = InterpreterState::USCXML_UNDEF;
 	Interpreter _interpreter;	
-	
+	ActionLanguage _lang;
 	std::unique_ptr<FactoryDynamic> _factory_ptr;	
 	std::unique_ptr<SequenceCheckingMonitor> _monitor_ptr;
-	ActionLanguage _lang;	
 	std::thread * _interpreter_thread_ptr = nullptr; // do not use smart pointer! AccessViolation in C++ Builder
 
 	void setState(InterpreterState AState);

@@ -113,7 +113,7 @@ public:
 };
 
 //---------------------------------------------------------------------------
-void __stdcall OnInterpreterLog(const UsclibInterpreter *AInterpreter, const int nSeverity, const char *chMessage, void *AUser) {
+void __stdcall OnInterpreterLog(const int nSeverity, const char *chMessage, void *AUser) {
 	(new TLogNotify(chMessage, nSeverity))->Notify();
 }
 
@@ -138,7 +138,7 @@ __fastcall TFormW3C::TFormW3C(TComponent* Owner) : TForm(Owner) {
 			throw Exception("Directory [" + FDirW3C + "] does not exist!");
 
 		const AnsiString sLogFile = ChangeFileExt(Application->ExeName, ".scxml.log");
-		if (USCLIB_SUCCESS != usclib_InitLogging(sLogFile.c_str()))
+		if (USCLIB_SUCCESS != usclib_InitLogging(sLogFile.c_str(), OnInterpreterLog, NULL))
 			throw Exception(usclib_GetLastError());
 
 		if (USCLIB_SUCCESS != usclib_InitHTTP(7080, 7443))
@@ -254,8 +254,6 @@ void __fastcall TFormW3C::BtnStartClick(TObject *Sender) {
 
 			if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, &AInterpreterOptions))
 				throw Exception(usclib_GetLastError());
-
-			usclib_RegisterLogCallback(g_Interpreter, OnInterpreterLog, NULL);
 		}
 
 		InterpreterStartNext();
