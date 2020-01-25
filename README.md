@@ -2,7 +2,10 @@
 ![intro](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/StateCharts/TrafficLight.gif)
 
 ## State Machines in C++ Builder, Delphi
-[USCXML](https://github.com/tklab-tud/uscxml) is a great library and I always wanted to use it in C++ Builder, but unfortunately Borland C++ Compiler is quite a specific thing. After many unsuccessful attempts to compile it with Borland C++ Compiler I decided to create wrapper which would be easy to install. Solution was to create C library which would be definetely built on all versions of Borland C++ Compiler. Also I decided to simplify some things which seemed to be redundant for using in C++ Builder.
+The main objective of the project is to execute dynamic SCXML state charts in C++ Builder by using such a great library as
+[USCXML](https://github.com/tklab-tud/uscxml). But the problem is that USCXML source code can not be compiled by Borland C++ Compiler (C11, compiler bugs etc). We have an option to use [uscxml-transformer application](https://github.com/tklab-tud/uscxml/blob/master/src/apps/uscxml-transform.cpp) for transpiling SCXML source code to ANSI-C. But in this case you have to compile application every time once you've made corrections to state chart. The solution seems to have a common library wrapper with only C-functions, which could be executed on all versions of C++ Builder.
+
+**UscxmlCLib** consists of only 1 lib and 1 header which should be added to C++ Builder to start executing state charts.
 
 ## Supported Operating System
 Windows 7, Windows 8, Windows 10
