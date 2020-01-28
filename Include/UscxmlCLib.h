@@ -124,10 +124,11 @@ typedef struct {						/* DEFAULT */
 	bool Monitor;						// true							
 	const char *RemoteMonitorHost;		// 127.0.0.1
 	int  RemoteMonitorPort;				// 0 (disabled)
-	bool CheckIssues;					// true						
-	bool TerminateOnIssues;				// true
+	bool Validate;						// true						
+	bool TerminateNotValidated;			// true
 	int  MonitorMsgTypes;				// USCLIB_SCXML_EDITOR_MSG_TYPES
 	bool DisableGlobalData;				// false
+	bool AsyncStart;					// false
 } UsclibInterpreterOptions;
 
 typedef void(__stdcall *CALLBACK_USCLIB_GLOBAL_LOG)

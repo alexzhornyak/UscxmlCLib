@@ -250,7 +250,8 @@ void __fastcall TFormW3C::BtnStartClick(TObject *Sender) {
 			UsclibInterpreterOptions AInterpreterOptions;
 			if (USCLIB_SUCCESS != usclib_GetDefaultInterpreterOptions(&AInterpreterOptions))
 				throw Exception(usclib_GetLastError());
-			AInterpreterOptions.CheckIssues = false;
+			AInterpreterOptions.Validate = false;
+			AInterpreterOptions.AsyncStart = true;
 
 			if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, &AInterpreterOptions))
 				throw Exception(usclib_GetLastError());

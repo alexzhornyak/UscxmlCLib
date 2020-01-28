@@ -1,0 +1,8 @@
+PngHighlight RCData "..\\..\\..\\Images\\Salus\\BtnHighlight.png"
+PngReset RCData "..\\..\\..\\Images\\Salus\\BtnReset.png"
+PngSelect RCData "..\\..\\..\\Images\\Salus\\BtnSelect.png"
+PngSet RCData "..\\..\\..\\Images\\Salus\\BtnSet.png"
+PngDown RCData "..\\..\\..\\Images\\Salus\\BtnTempDown.png"
+PngUp RCData "..\\..\\..\\Images\\Salus\\BtnTempUp.png"
+PngFlame RCData "..\\..\\..\\Images\\Salus\\IconFlame.png"
+PngSnow RCData "..\\..\\..\\Images\\Salus\\IconSnowFlake.png"

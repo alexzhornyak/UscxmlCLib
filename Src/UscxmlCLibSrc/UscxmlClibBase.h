@@ -102,19 +102,21 @@ public:
 /*                            ScxmlBase                                 */
 /************************************************************************/
 
-class ScxmlBase
-{
+typedef struct {						
+	bool Monitor = true;
+	std::string RemoteMonitorHost = "127.0.0.1";
+	int  RemoteMonitorPort = SCXML_DISABLE_REMOTE_MONITOR;
+	bool Validate = true;
+	bool TerminateNotValidated = true;
+	std::set<TScxmlMsgType>  MonitorMsgTypes{ smttBeforeEnter,smttBeforeExit, smttBeforeTakingTransition,smttBeforeInvoke, smttBeforeUnInvoke };				// USCLIB_SCXML_EDITOR_MSG_TYPES
+	bool DisableGlobalData = false;
+	bool AsyncStart = false;
+} ScxmlBaseOptions;
+
+class ScxmlBase {
 public:
 
-	ScxmlBase(const std::vector<std::string> &ACMDArgs,
-		const std::set<TScxmlMsgType> &AMonitorMessages,
-		const bool bMonitor = true,
-		const std::string sRemoteHost = "127.0.0.1",
-		const int iRemotePort = SCXML_DISABLE_REMOTE_MONITOR,
-		const bool bCheckIssues = true,
-		const bool bTerminateOnIssues = true,
-		const bool bHttpEnabled = false,
-		const bool bGlobalDataDisabled = false);
+	ScxmlBase(const std::vector<std::string> &ACMDArgs,	const ScxmlBaseOptions &AScxmlBaseOptions, const bool bHttpEnabled = false);
 
 	~ScxmlBase(void);
 
@@ -157,7 +159,7 @@ public:
 	void waitForStopped(void);
 	void receive(const Event& event);
 
-	inline bool useRemoteMonitor(void) const { return _remotePort != SCXML_DISABLE_REMOTE_MONITOR; }	
+	inline bool useRemoteMonitor(void) const { return _options.RemoteMonitorPort != SCXML_DISABLE_REMOTE_MONITOR; }
 
 	InterpreterState getState() const;
 	inline InterpreterImpl *getImpl() const { return _interpreter ? _interpreter.getImpl().get() : nullptr; }
@@ -165,7 +167,7 @@ public:
 	/* methods for extended Lua DataModel (luavia) */
 	uscxml::Data getGlobal(const std::string &sScxmlName, const std::string &sPath) const;
 	void setGlobal(const std::string &sScxmlName, const std::string &sPath, const uscxml::Data &data, const int iType);
-	bool isGlobalDataEnabled() const { return !_globalDataDisabled; }
+	bool isGlobalDataEnabled() const { return !_options.DisableGlobalData; }
 
 	const std::string getExeDir() const;
 	std::string getProjectPath() const;
@@ -177,14 +179,9 @@ protected:
 
 	/* Options */
 	const std::vector<std::string> _CMDArgs;
-	const bool _monitor;
-	const bool _validate;
-	const bool _terminateOnFatalIssues;
-	const std::string _remoteHost;
-	const int _remotePort;
-	const std::set<TScxmlMsgType> _Messages;
+
+	const ScxmlBaseOptions _options;
 	const bool _httpEnabled;
-	const bool _globalDataDisabled;
 
 	/* CALLBACKS */
 	friend class SequenceCheckingMonitor;

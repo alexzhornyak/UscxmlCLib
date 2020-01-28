@@ -9,53 +9,13 @@
 #include "UscxmlClibLogger.h"
 #include "UscxmlLuaDataModelEx.h"
 
-void issueLocationsForXML(uscxml::Interpreter *interpreter) {
-	std::list<InterpreterIssue> issues = interpreter->validate();
-
-	bool bIsError = false;
-
-	for (std::list<InterpreterIssue>::iterator issueIter = issues.begin(); issueIter != issues.end(); issueIter++) {
-		switch (issueIter->severity) {
-		case InterpreterIssue::USCXML_ISSUE_FATAL: {
-			std::stringstream ss;
-			ss << *issueIter;
-			LOG(interpreter->getLogger(), USCXML_ERROR) << ss.str();
-			bIsError = true;
-		} break;
-		case InterpreterIssue::USCXML_ISSUE_INFO: {
-			std::stringstream ss;
-			ss << *issueIter;
-			LOG(interpreter->getLogger(), USCXML_INFO) << ss.str();
-		} break;
-		case InterpreterIssue::USCXML_ISSUE_WARNING: {
-			std::stringstream ss;
-			ss << *issueIter;
-			LOG(interpreter->getLogger(), USCXML_WARN) << ss.str();
-		} break;
-		}
-	}
-	if (bIsError)
-		throw std::runtime_error("Fatal SCXML error! Interpreter stopped!");
-}
-
-ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs,
-	const std::set<TScxmlMsgType> &AMonitorMessages,
-	const bool bMonitor/* = true*/,
-	const std::string sRemoteHost/* = "127.0.0.1"*/,
-	const int iRemotePort/* = SCXML_BASE_DISABLE_REMOTE_MONITOR*/,
-	const bool bCheckIssues/* = true*/,
-	const bool bTerminateOnIssues/* = true*/,
-	const bool bHttpEnabled/* = false*/,
-	const bool bGlobalDataDisabled/* = false*/):
-	_remotePort(iRemotePort), _remoteHost(sRemoteHost), _monitor(bMonitor),
-	_CMDArgs(ACMDArgs), _validate(bCheckIssues), _terminateOnFatalIssues(bTerminateOnIssues),
-	_Messages(AMonitorMessages),
-	_httpEnabled(bHttpEnabled), _globalDataDisabled(bGlobalDataDisabled) {
+ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs, const ScxmlBaseOptions &AScxmlBaseOptions, const bool bHttpEnabled/* = false*/):
+	_options(AScxmlBaseOptions), _httpEnabled(bHttpEnabled) {
 	
-	if (bMonitor) {
+	if (_options.Monitor) {
 		std::stringstream ss;
-		for (auto it = AMonitorMessages.begin(); it != AMonitorMessages.end(); ++it) {
-			if (it != AMonitorMessages.begin())
+		for (auto it = _options.MonitorMsgTypes.begin(); it != _options.MonitorMsgTypes.end(); ++it) {
+			if (it != _options.MonitorMsgTypes.begin())
 				ss << "|";
 			ss << ScxmlMsgTypeToString(*it);
 		}
@@ -66,6 +26,11 @@ ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs,
 ScxmlBase::~ScxmlBase(void)
 {
 	close();
+
+	// there were caught AccessViolation in microstepper (state chart with multiple invoked state charts)	
+	// if '_interpreter' was not deleted before clearing '_monitor_ptr'
+	// clearing '_monitor_ptr' here does not solve the problem
+	_interpreter = Interpreter();
 }
 
 void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {	
@@ -86,6 +51,7 @@ void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {
 
 	setState(USCXML_UNDEF);
 
+	/* We are setting custom factory per Intepreter */
 	_factory_ptr.reset(new FactoryDynamic(&Factory::getInstance()));
 
 	std::set<Factory::PluginType> FACTORY_TYPES{
@@ -110,11 +76,37 @@ void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {
 	_queue_ptr.reset(new PausableDelayedEventQueue(_interpreter.getImpl().get(),this));
 	_lang.delayQueue = DelayedEventQueue(_queue_ptr);
 	/* intercept native logger in any case */
-	_lang.logger = std::shared_ptr<LoggerImpl>(new CLibLogger(_monitor, this, _OnInterpreterLog, _OnInterpreterLogUser));
+	_lang.logger = std::shared_ptr<LoggerImpl>(new CLibLogger(_options.Monitor, this, _OnInterpreterLog, _OnInterpreterLogUser));
 	_interpreter.setActionLanguage(_lang);
 
-	if (_validate) {
-		issueLocationsForXML(&_interpreter);
+	/* Validate for SCXML and script syntax errors */
+	if (_options.Validate) {
+		std::list<InterpreterIssue> issues = _interpreter.validate();
+
+		bool bIsError = false;
+
+		for (std::list<InterpreterIssue>::iterator issueIter = issues.begin(); issueIter != issues.end(); issueIter++) {
+			switch (issueIter->severity) {
+			case InterpreterIssue::USCXML_ISSUE_FATAL: {
+				std::stringstream ss;
+				ss << *issueIter;
+				LOG(_interpreter.getLogger(), USCXML_ERROR) << ss.str();
+				bIsError = true;
+			} break;
+			case InterpreterIssue::USCXML_ISSUE_INFO: {
+				std::stringstream ss;
+				ss << *issueIter;
+				LOG(_interpreter.getLogger(), USCXML_INFO) << ss.str();
+			} break;
+			case InterpreterIssue::USCXML_ISSUE_WARNING: {
+				std::stringstream ss;
+				ss << *issueIter;
+				LOG(_interpreter.getLogger(), USCXML_WARN) << ss.str();
+			} break;
+			}
+		}
+		if (bIsError && _options.TerminateNotValidated)
+			throw std::runtime_error("Fatal SCXML validation error(s)! Interpreter stopped!");
 	}
 		
 	_monitor_ptr.reset(new SequenceCheckingMonitor(this, _lang.logger));
@@ -122,14 +114,38 @@ void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {
 	_interpreter.addMonitor(_monitor_ptr.get());
 	
 	_AppTimer.start();
+	
+	/* 
+		if state chart is to large and you do not want to wait while it reaches the stable state,
+		you may use 'AsyncStart' option 
+	*/
+	if (!_options.AsyncStart) {
+		/* synchronized load */
+		auto state_temp = USCXML_UNDEF;
+		const std::set<InterpreterState> AStableStates{ USCXML_FINISHED, USCXML_CANCELLED, USCXML_MACROSTEPPED };
+		do {
+			state_temp = _interpreter.step();
+			setState(state_temp);
+		} while (AStableStates.find(state_temp) == AStableStates.end());
+	}	
 
-	_interpreter_thread_ptr = new std::thread(std::bind(&ScxmlBase::blockingQueue, this));
+	/* check that state chart is not finished yet */
+	const std::set<InterpreterState> AFinishedStates{ USCXML_FINISHED, USCXML_CANCELLED };
+	if (AFinishedStates.find(getState()) == AFinishedStates.end()) {
+		_interpreter_thread_ptr = new std::thread(std::bind(&ScxmlBase::blockingQueue, this));
+	}
+	else {
+		if (_OnInterpreterStopped) {
+			_OnInterpreterStopped(this, _OnInterpreterStoppedUser);
+		}
+	}
 }
 
 void ScxmlBase::close()
 {
-	std::set<InterpreterState> ANonCancelledStates{ USCXML_UNDEF, USCXML_INSTANTIATED, USCXML_CANCELLED, USCXML_FINISHED };
-	if (_interpreter && ANonCancelledStates.find(this->getState())== ANonCancelledStates.end()) {
+	const std::set<InterpreterState> ASkippedStates{ USCXML_UNDEF, USCXML_CANCELLED, USCXML_FINISHED };
+	auto state = this->getState();
+	if (_interpreter && _interpreter_thread_ptr && ASkippedStates.find(state) == ASkippedStates.end()) {
 		_interpreter.cancel();
 	}
 
@@ -184,9 +200,12 @@ void ScxmlBase::resume()
 }
 
 void ScxmlBase::receive(const Event& event) {
-	if (_interpreter && _queue_ptr && !_queue_ptr->isPaused()) {		
+	// while interpreter is not initialized EventQueue is NULL !
+	if (_interpreter && getState()!=USCXML_UNDEF && _queue_ptr && !_queue_ptr->isPaused()) {
 		_interpreter.receive(event);
-	}		
+	}
+	else
+		throw std::runtime_error("Interpereter is not ready to receive event [" + event.name + "]");
 }
 
 const std::string ScxmlBase::getExeDir() const
@@ -346,10 +365,12 @@ SequenceCheckingMonitor::SequenceCheckingMonitor(ScxmlBase *AScxmlBase, const Lo
 	_logger = logger;
 	
 	if (_ScxmlBase->useRemoteMonitor()) {
-		_endpoint = udp::endpoint(boost::asio::ip::address::from_string(_ScxmlBase->_remoteHost), _ScxmlBase->_remotePort);
+		_endpoint = udp::endpoint(boost::asio::ip::address::from_string(_ScxmlBase->_options.RemoteMonitorHost),
+			_ScxmlBase->_options.RemoteMonitorPort);
 		_out_socket.open(_endpoint.protocol());
 
-		CLOG(INFO) << "Remote monitor started on host:[" << _ScxmlBase->_remoteHost << "] port:[" << _ScxmlBase->_remotePort << "]";
+		CLOG(INFO) << "Remote monitor started on host:[" << _ScxmlBase->_options.RemoteMonitorHost 
+			<< "] port:[" << _ScxmlBase->_options.RemoteMonitorPort << "]";
 	}
 }
 
@@ -359,8 +380,9 @@ void SequenceCheckingMonitor::sendMessage(const std::string &sInterpreterName, c
 
 void SequenceCheckingMonitor::beforeExitingState(Interpreter& interpreter, const XERCESC_NS::DOMElement* state)
 {
-	const bool bMonitor = _ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttBeforeExit) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end());
+	const bool bMonitor = _ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttBeforeExit) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end());
 	if (bMonitor || _ScxmlBase->_OnInterpreterEnterExit) {
 		
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -384,8 +406,9 @@ void SequenceCheckingMonitor::beforeExitingState(Interpreter& interpreter, const
 
 void SequenceCheckingMonitor::afterExitingState(Interpreter& interpreter, const XERCESC_NS::DOMElement* state)
 {
-	const bool bMonitor = _ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttAfterExit) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end());
+	const bool bMonitor = _ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttAfterExit) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end());
 	if (bMonitor) {
 
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -402,8 +425,9 @@ void SequenceCheckingMonitor::afterExitingState(Interpreter& interpreter, const 
 
 void SequenceCheckingMonitor::beforeEnteringState(Interpreter& interpreter, const XERCESC_NS::DOMElement* state)
 {
-	const bool bMonitor = _ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttBeforeEnter) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end());
+	const bool bMonitor = _ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttBeforeEnter) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end());
 	if (bMonitor || _ScxmlBase->_OnInterpreterEnterExit) {
 
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -427,8 +451,9 @@ void SequenceCheckingMonitor::beforeEnteringState(Interpreter& interpreter, cons
 
 void SequenceCheckingMonitor::afterEnteringState(Interpreter& interpreter, const XERCESC_NS::DOMElement* state)
 {
-	const bool bMonitor = _ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttAfterEnter) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end());
+	const bool bMonitor = _ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttAfterEnter) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end());
 	if (bMonitor) {
 
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -445,8 +470,9 @@ void SequenceCheckingMonitor::afterEnteringState(Interpreter& interpreter, const
 
 void SequenceCheckingMonitor::beforeExecutingContent(Interpreter& interpreter, const XERCESC_NS::DOMElement* execContent)
 {
-	if (_ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttBeforeExecContent) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end())) {
+	if (_ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttBeforeExecContent) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end())) {
 
 		StateTransitionMonitor::beforeExecutingContent(interpreter, execContent);
 
@@ -459,8 +485,9 @@ void SequenceCheckingMonitor::beforeExecutingContent(Interpreter& interpreter, c
 
 void SequenceCheckingMonitor::afterExecutingContent(Interpreter& interpreter, const XERCESC_NS::DOMElement* execContent)
 {
-	if (_ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttAfterExecContent) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end())) {
+	if (_ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttAfterExecContent) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end())) {
 
 		StateTransitionMonitor::afterExecutingContent(interpreter, execContent);
 		
@@ -473,8 +500,9 @@ void SequenceCheckingMonitor::afterExecutingContent(Interpreter& interpreter, co
 
 void SequenceCheckingMonitor::beforeUninvoking(Interpreter& interpreter, const XERCESC_NS::DOMElement* invokeElem, const std::string& invokeid)
 {
-	const bool bMonitor = _ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttBeforeUnInvoke) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end());
+	const bool bMonitor = _ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttBeforeUnInvoke) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end());
 	if (bMonitor || _ScxmlBase->_OnInterpreterInvoke) {
 
 		std::lock_guard<std::recursive_mutex> lock(_mutex);			
@@ -496,8 +524,9 @@ void SequenceCheckingMonitor::beforeUninvoking(Interpreter& interpreter, const X
 
 void SequenceCheckingMonitor::afterUninvoking(Interpreter& interpreter, const XERCESC_NS::DOMElement* invokeElem, const std::string& invokeid)
 {
-	if (_ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttAfterUnInvoke) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end())) {
+	if (_ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttAfterUnInvoke) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end())) {
 
 		StateTransitionMonitor::afterUninvoking(interpreter, invokeElem, invokeid);
 		
@@ -510,8 +539,9 @@ void SequenceCheckingMonitor::afterUninvoking(Interpreter& interpreter, const XE
 
 void SequenceCheckingMonitor::beforeInvoking(Interpreter& interpreter, const XERCESC_NS::DOMElement* invokeElem, const std::string& invokeid)
 {
-	const bool bMonitor = _ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttBeforeInvoke) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end());
+	const bool bMonitor = _ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttBeforeInvoke) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end());
 	if (bMonitor || _ScxmlBase->_OnInterpreterInvoke) {
 
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -533,8 +563,9 @@ void SequenceCheckingMonitor::beforeInvoking(Interpreter& interpreter, const XER
 
 void SequenceCheckingMonitor::afterInvoking(Interpreter& interpreter, const XERCESC_NS::DOMElement* invokeElem, const std::string& invokeid)
 {
-	if (_ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttAfterInvoke) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end())) {
+	if (_ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttAfterInvoke) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end())) {
 
 		StateTransitionMonitor::afterInvoking(interpreter, invokeElem, invokeid);
 
@@ -547,8 +578,9 @@ void SequenceCheckingMonitor::afterInvoking(Interpreter& interpreter, const XERC
 
 void SequenceCheckingMonitor::beforeTakingTransition(Interpreter& interpreter, const XERCESC_NS::DOMElement* transition)
 {
-	if (_ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttBeforeTakingTransition) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end())) {
+	if (_ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttBeforeTakingTransition) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end())) {
 
 		StateTransitionMonitor::beforeTakingTransition(interpreter, transition);
 		
@@ -565,8 +597,9 @@ void SequenceCheckingMonitor::beforeTakingTransition(Interpreter& interpreter, c
 
 void SequenceCheckingMonitor::afterTakingTransition(Interpreter& interpreter, const XERCESC_NS::DOMElement* transition)
 {
-	if (_ScxmlBase->_monitor && (_ScxmlBase->_Messages.find(smttAfterTakingTransition) != _ScxmlBase->_Messages.end() ||
-		_ScxmlBase->_Messages.find(smttMAXSIZE) != _ScxmlBase->_Messages.end())) {
+	if (_ScxmlBase->_options.Monitor &&
+		(_ScxmlBase->_options.MonitorMsgTypes.find(smttAfterTakingTransition) != _ScxmlBase->_options.MonitorMsgTypes.end() ||
+		_ScxmlBase->_options.MonitorMsgTypes.find(smttMAXSIZE) != _ScxmlBase->_options.MonitorMsgTypes.end())) {
 
 		StateTransitionMonitor::afterTakingTransition(interpreter, transition);
 		

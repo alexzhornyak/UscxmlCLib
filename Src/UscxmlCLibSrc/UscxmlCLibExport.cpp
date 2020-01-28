@@ -109,30 +109,27 @@ int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 			AVecString.swap(AVecCmd);
 		}
 		
-		std::set<TScxmlMsgType> AMonitorMessages{smttBeforeEnter,
-			smttBeforeExit, smttBeforeTakingTransition,
-			smttBeforeInvoke, smttBeforeUnInvoke };
+		ScxmlBaseOptions AScxmlBaseOptions;
 
 		if (AInterpreterOptions) {
-			std::set<TScxmlMsgType> AOptionsMsgs;
+			AScxmlBaseOptions.MonitorMsgTypes.clear();
 			std::bitset<smttMAXSIZE+1> ABitMsgs(AInterpreterOptions->MonitorMsgTypes);
 			for (std::size_t n = 0; n < ABitMsgs.size(); n++) {
 				if (ABitMsgs[n]) {
-					AOptionsMsgs.insert(TScxmlMsgType(n));
+					AScxmlBaseOptions.MonitorMsgTypes.insert(TScxmlMsgType(n));
 				}
 			}
-			AMonitorMessages.swap(AOptionsMsgs);
+
+			AScxmlBaseOptions.Monitor = AInterpreterOptions->Monitor;
+			AScxmlBaseOptions.RemoteMonitorHost = AInterpreterOptions->RemoteMonitorHost;
+			AScxmlBaseOptions.RemoteMonitorPort = AInterpreterOptions->RemoteMonitorPort;
+			AScxmlBaseOptions.Validate = AInterpreterOptions->Validate;
+			AScxmlBaseOptions.TerminateNotValidated = AInterpreterOptions->TerminateNotValidated;
+			AScxmlBaseOptions.DisableGlobalData = AInterpreterOptions->DisableGlobalData;
+			AScxmlBaseOptions.AsyncStart = AInterpreterOptions->AsyncStart;
 		}
 
-		ScxmlBase *AScxmlBase = new ScxmlBase(AVecString, 
-			AMonitorMessages,
-			AInterpreterOptions ? AInterpreterOptions->Monitor : true,
-			AInterpreterOptions ? AInterpreterOptions->RemoteMonitorHost : "127.0.0.1",
-			AInterpreterOptions? AInterpreterOptions->RemoteMonitorPort : SCXML_DISABLE_REMOTE_MONITOR,
-			AInterpreterOptions ? AInterpreterOptions->CheckIssues : true,
-			AInterpreterOptions ? AInterpreterOptions->TerminateOnIssues : true,
-			g_HTTP_ENABLED,
-			AInterpreterOptions ? AInterpreterOptions->DisableGlobalData : false);
+		ScxmlBase *AScxmlBase = new ScxmlBase(AVecString, AScxmlBaseOptions, g_HTTP_ENABLED);
 
 		*AInterpreter = AScxmlBase;
 		g_INTERPRETERS.insert(*AInterpreter);
@@ -360,8 +357,8 @@ int USCXMLCLIBAPI usclib_GetDefaultInterpreterOptions(UsclibInterpreterOptions *
 	AInterpreterOptions->Monitor = true;
 	AInterpreterOptions->RemoteMonitorHost = "127.0.0.1";
 	AInterpreterOptions->RemoteMonitorPort = SCXML_DISABLE_REMOTE_MONITOR;
-	AInterpreterOptions->CheckIssues = true;
-	AInterpreterOptions->TerminateOnIssues = true;
+	AInterpreterOptions->Validate = true;
+	AInterpreterOptions->TerminateNotValidated = true;
 	AInterpreterOptions->MonitorMsgTypes = USCLIB_SCXMLEDITOR_MSG_TYPES;
 	AInterpreterOptions->DisableGlobalData = false;
 

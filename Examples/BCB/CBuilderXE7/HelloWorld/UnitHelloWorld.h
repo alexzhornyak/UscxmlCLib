@@ -17,6 +17,7 @@ __published:	// IDE-managed Components
 private:	// User declarations
 public:		// User declarations
 	__fastcall TFormHelloWorld(TComponent* Owner);
+	virtual __fastcall ~TFormHelloWorld(void);
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TFormHelloWorld *FormHelloWorld;
