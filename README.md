@@ -1,9 +1,9 @@
 # USCXML C-Style Wrapper (for C++ Builder, Delphi)
-![intro](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/StateCharts/TrafficLight.gif)
+![intro](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/TrafficLight.gif)
 
 ## State Machines in C++ Builder, Delphi
 The main objective of the project is to execute dynamic SCXML state charts in C++ Builder by using such a great library as
-[USCXML](https://github.com/tklab-tud/uscxml). But the problem is that USCXML source code can not be compiled by Borland C++ Compiler (C11, compiler bugs etc). We have an option to use [uscxml-transformer application](https://github.com/tklab-tud/uscxml/blob/master/src/apps/uscxml-transform.cpp) for transpiling SCXML source code to ANSI-C. But in this case you have to compile application every time once you've made corrections to state chart. The solution seems to have a common library wrapper with only C-functions, which could be executed on all versions of C++ Builder.
+[USCXML](https://github.com/tklab-tud/uscxml). But the problem is that USCXML source code can not be compiled by Borland C++ Compiler (not fuul C11 support, compiler bugs etc). We have an option to use [uscxml-transformer application](https://github.com/tklab-tud/uscxml/blob/master/src/apps/uscxml-transform.cpp) for transpiling SCXML source code to ANSI-C. But in this case you have to compile application every time once you've made corrections to state chart. The solution seems to have a common library wrapper with only C-functions, which could be executed on all versions of C++ Builder.
 
 **UscxmlCLib** consists of only 1 lib and 1 header which should be added to C++ Builder to start executing state charts.
 
@@ -58,7 +58,7 @@ void __stdcall OnInterpreterLogCallback(const UsclibInterpreter *AInterpreter, c
 }
 ```
 
-3. Start inperpreter
+3. Work with interprter
 ```
 if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, 0))
 	throw Exception(usclib_GetLastError());
@@ -73,9 +73,6 @@ if (USCLIB_SUCCESS != usclib_CloseInterpreter(g_Interpreter))
 ```
 ### Output
 ![image](https://user-images.githubusercontent.com/18611095/73010483-2ee4b100-3e1b-11ea-86cc-ad7be2ba65e1.png)
-
-## Examples
-After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/README.md#installation) you are able to start [ready-to-use examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples): [HelloWorld](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/HelloWorld), [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/TrafficLight) etc.
 
 ## Licensing
 UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause License but it include external components with their own licensies
@@ -96,3 +93,13 @@ Almost the same as uSCXML original with some restrictions. Run W3C [testing appl
 1. NULL
 2. Lua
 3. Luavia (Lua datamodel with some non-standard extensions to increase state chart performance)
+
+## Examples
+After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/README.md#installation) you are able to start [ready-to-use examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples): [HelloWorld](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/HelloWorld), [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/TrafficLight) etc.
+
+### Take special look at [KT76C Transponder Example](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/CBuilder2010/KT76CSim)\!
+It has **ZERO** lines of device logic in C++! Just connected GUI controls!
+
+![KT76C](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.png)
+
+![KT76C_Logic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C.png)
