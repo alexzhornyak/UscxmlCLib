@@ -18,6 +18,7 @@
 #include "UscxmlClibExtensions.h"
 
 #define SCXMLTASK_TO_GLOBAL_ONLY				0
+#define SCXMLTASK_TO_PROTOCOL					1
 
 #define SCXML_DISABLE_REMOTE_MONITOR			0
 #define SCXML_DEFAULT_SCXMLEDITOR_MONITOR		11005

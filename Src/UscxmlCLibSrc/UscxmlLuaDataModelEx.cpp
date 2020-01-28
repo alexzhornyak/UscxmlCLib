@@ -61,6 +61,7 @@ namespace uscxml {
 		luabridge::setGlobal(_luaState, _ScxmlBase->getProjectFileName(), "s_PROJECT_FILENAME");
 
 		luabridge::setGlobal(_luaState, SCXMLTASK_TO_GLOBAL_ONLY, "TO_GLOBAL_ONLY");
+		luabridge::setGlobal(_luaState, SCXMLTASK_TO_PROTOCOL, "TO_PROTOCOL");
 
 		luabridge::LuaRef ACMDArgs = luabridge::newTable(_luaState);
 		for (std::size_t n = 0; n < _ScxmlBase->getCMDArgs().size(); n++) {
