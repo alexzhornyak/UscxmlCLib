@@ -60,7 +60,7 @@ protected:
 			for (int i = 0; i < FormSalusRT500->frameOutputs->ControlCount; i++) {
 				TControl * AControl = dynamic_cast<TControl*>(FormSalusRT500->frameOutputs->Controls[i]);
 				if (AControl) {
-					AControl->Visible = true;
+					AControl->Visible = FEnter;
 				}
 			}
 		}
