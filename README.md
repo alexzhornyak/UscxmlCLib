@@ -65,7 +65,7 @@ if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, 0))
 
 usclib_RegisterLogCallback(g_Interpreter, OnInterpreterLogCallback, NULL);
 
-if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, g_chScxml, true))
+if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, g_chScxml, USCLIB_SCXML_AS_TEXT))
 	throw Exception(usclib_GetLastError());
 
 if (USCLIB_SUCCESS != usclib_CloseInterpreter(g_Interpreter))
