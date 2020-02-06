@@ -201,7 +201,7 @@ void ScxmlBase::resume()
 
 void ScxmlBase::receive(const Event& event) {
 	// while interpreter is not initialized EventQueue is NULL !
-	if (_interpreter && getState()!=USCXML_UNDEF && _queue_ptr && !_queue_ptr->isPaused()) {
+	if (_interpreter && getState()!=USCXML_UNDEF) {
 		_interpreter.receive(event);
 	}
 	else

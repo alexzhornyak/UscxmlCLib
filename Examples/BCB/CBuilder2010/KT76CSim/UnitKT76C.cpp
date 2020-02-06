@@ -81,9 +81,9 @@ __fastcall TFormKT76C::TFormKT76C(TComponent* Owner) : TForm(Owner) {
 		if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, &AInterpreterOptions))
 			throw Exception(usclib_GetLastError());
 
-		usclib_RegisterInterpreterGlobalDataChangeCallback(g_Interpreter, true /*atom*/, OnInterpreterGlobalDataChange, NULL);
+		usclib_RegisterInterpreterGlobalDataChangeCallback(g_Interpreter, OnInterpreterGlobalDataChange, USCLIB_DATATYPE_ATOM, NULL);
 
-		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), false))
+		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE))
 			throw Exception(usclib_GetLastError());
 	}
 	catch(Exception * E) {

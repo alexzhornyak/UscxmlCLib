@@ -63,9 +63,9 @@ __fastcall TFormSalusRT500::TFormSalusRT500(TComponent* Owner) : TForm(Owner), F
 			throw Exception(usclib_GetLastError());
 
 		usclib_RegisterInterpreterEnterCallback(FInterpreter, OnInterpreterEnterExit, NULL);
-		usclib_RegisterInterpreterEventCallback(FInterpreter, OnInterpreterEvent, true, NULL);
+		usclib_RegisterInterpreterEventCallback(FInterpreter, OnInterpreterEvent, USCLIB_DATATYPE_ATOM, NULL);
 
-		if (USCLIB_SUCCESS != usclib_StartInterpreter(FInterpreter, sScxmlFile.c_str(), false))
+		if (USCLIB_SUCCESS != usclib_StartInterpreter(FInterpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE))
 			throw Exception(usclib_GetLastError());
 
 		g_Started = true;

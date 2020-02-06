@@ -188,7 +188,8 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterEnterCallback(UsclibInterpreter * AI
 	return ERROR_USCLIB_REGISTER_CALLBACK;
 }
 
-int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_INVOKE ACallback, void * AUser)
+int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_INVOKE ACallback,
+	void * AUser)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
@@ -203,7 +204,8 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterInvokeCallback(UsclibInterpreter * A
 	return ERROR_USCLIB_REGISTER_CALLBACK;
 }
 
-int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_EVENT ACallback, const bool bAtomOrJson, void * AUser)
+int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_EVENT ACallback,
+	const UsclibDataType bAtomOrJson, void * AUser)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
@@ -218,7 +220,8 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterEventCallback(UsclibInterpreter * AI
 	return ERROR_USCLIB_REGISTER_CALLBACK;
 }
 
-int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_NOTIFY ACallback, void * AUser)
+int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter * AInterpreter, CALLBACK_USCLIB_INTERPRETER_NOTIFY ACallback,
+	void * AUser)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);
@@ -233,7 +236,8 @@ int USCXMLCLIBAPI usclib_RegisterInterpreterStoppedCallback(UsclibInterpreter * 
 	return ERROR_USCLIB_REGISTER_CALLBACK;
 }
 
-int USCXMLCLIBAPI usclib_RegisterInterpreterGlobalDataChangeCallback(UsclibInterpreter * AInterpreter, const bool bIsAtomOrJson, CALLBACK_USCLIB_GLOBAL_DATA_CHANGE ACallback, void * AUser)
+int USCXMLCLIBAPI usclib_RegisterInterpreterGlobalDataChangeCallback(UsclibInterpreter * AInterpreter,
+	CALLBACK_USCLIB_GLOBAL_DATA_CHANGE ACallback, const UsclibDataType bIsAtomOrJson, void * AUser)
 {
 	try {
 		CHECK_INTERPRETER_VALID(AInterpreter);

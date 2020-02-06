@@ -13,7 +13,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(LUA_ROOT)\lua-5.3.4\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(LUA_ROOT)\lua-5.3.4\vc14\$(Configuration)\lua_53_$(VcToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(LUA_ROOT)\lua-5.3.4\$(VcToolset)\$(Configuration)\lua_53_$(VcToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

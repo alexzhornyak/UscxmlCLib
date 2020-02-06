@@ -65,7 +65,7 @@ void __fastcall TFormHelloWorld::BtnStartClick(TObject *Sender) {
 		if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, 0))
 			throw Exception(usclib_GetLastError());
 
-		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, g_chScxml, true))
+		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, g_chScxml, USCLIB_SCXML_AS_TEXT))
 			throw Exception(usclib_GetLastError());
 
 		if (USCLIB_SUCCESS != usclib_CloseInterpreter(g_Interpreter))

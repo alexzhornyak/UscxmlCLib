@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 #include <vcl.h>
 #pragma hdrstop
@@ -14,7 +14,7 @@
 
 #pragma comment(lib,"UscxmlCLib_borland.lib")
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 
@@ -28,9 +28,9 @@ UsclibInterpreter *g_Interpreter = NULL;
 #define SCXML_TREE_NODE_UNKNOWN		6
 #define SCXML_TREE_NODE_MANUAL		8
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 class TStoppedNotify : public TIdNotify {
 	TTreeNode *FNode;
 	bool FPass;
@@ -59,7 +59,7 @@ protected:
 				int iManual = 0;
 				int iNotPassed = 0;
 				for (int i = 0; i < FormW3C->TreeTests->Items->Count; i++) {
-					switch(FormW3C->TreeTests->Items->Item[i]->ImageIndex) {
+					switch (FormW3C->TreeTests->Items->Item[i]->ImageIndex) {
 					case SCXML_TREE_NODE_SUCCESS:
 						iPassed++;
 						break;
@@ -88,16 +88,16 @@ public:
 	}
 };
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __stdcall OnInterpreterStopped(const UsclibInterpreter *AInterpreter, void *AUser) {
 	bool bPass = false;
 	usclib_IsInterpreterInState(AInterpreter, "pass", &bPass);
 	(new TStoppedNotify(reinterpret_cast<TTreeNode*>(AUser), bPass))->Notify();
 }
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 class TLogNotify : public TIdNotify {
 	const UnicodeString FMessage;
 	const int FSeverity;
@@ -112,14 +112,14 @@ public:
 	}
 };
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __stdcall OnInterpreterLog(const int nSeverity, const char *chMessage, void *AUser) {
 	(new TLogNotify(chMessage, nSeverity))->Notify();
 }
 
-//---------------------------------------------------------------------------
-//--------------------------- TFormTrafficLight -----------------------------
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// --------------------------- TFormTrafficLight -----------------------------
+// ---------------------------------------------------------------------------
 __fastcall TFormW3C::TFormW3C(TComponent* Owner) : TForm(Owner) {
 	try {
 		// manual or restricted tests
@@ -163,12 +163,12 @@ __fastcall TFormW3C::TFormW3C(TComponent* Owner) : TForm(Owner) {
 
 		BtnStart->Enabled = true;
 	}
-	catch(Exception * E) {
+	catch (Exception * E) {
 		Log("ERROR> " + E->Message, USCLIB_LOG_ERROR);
 	}
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 __fastcall TFormW3C::~TFormW3C(void) {
 	if (g_Interpreter) {
 		usclib_CloseInterpreter(g_Interpreter);
@@ -177,24 +177,24 @@ __fastcall TFormW3C::~TFormW3C(void) {
 	usclib_GlobalCleanup();
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __fastcall TFormW3C::Log(const UnicodeString & sMsg, const int ASeverity) {
 	if (sMsg.IsEmpty())
 		return;
 
-	switch(ASeverity) {
+	switch (ASeverity) {
 	case USCLIB_LOG_INFO: {
 			RichEdit1->SelAttributes->Color = clBlue;
 			RichEdit1->SelAttributes->Style = TFontStyles();
-		}break;
+		} break;
 	case USCLIB_LOG_WARN: {
 			RichEdit1->SelAttributes->Color = clNavy;
 			RichEdit1->SelAttributes->Style = TFontStyles() << fsBold;
-		}break;
+		} break;
 	case USCLIB_LOG_ERROR: {
 			RichEdit1->SelAttributes->Color = clRed;
 			RichEdit1->SelAttributes->Style = TFontStyles() << fsBold;
-		}break;
+		} break;
 	default: {
 			RichEdit1->SelAttributes->Color = clGreen;
 			RichEdit1->SelAttributes->Style = TFontStyles();
@@ -205,7 +205,7 @@ void __fastcall TFormW3C::Log(const UnicodeString & sMsg, const int ASeverity) {
 	PostMessage(RichEdit1->Handle, WM_VSCROLL, SB_BOTTOM, 0);
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __fastcall TFormW3C::InterpreterStartNext() {
 	try {
 		for (int i = 0; i < TreeTests->Items->Count; i++) {
@@ -223,7 +223,7 @@ void __fastcall TFormW3C::InterpreterStartNext() {
 					Log("Test is manual or restricted!", USCLIB_LOG_WARN);
 				}
 
-				if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), false)) {
+				if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE)) {
 					TreeTests->Items->Item[i]->ImageIndex = SCXML_TREE_NODE_ERROR;
 					TreeTests->Items->Item[i]->SelectedIndex = TreeTests->Items->Item[i]->ImageIndex;
 					throw Exception(usclib_GetLastError());
@@ -233,12 +233,12 @@ void __fastcall TFormW3C::InterpreterStartNext() {
 			}
 		}
 	}
-	catch(Exception * E) {
+	catch (Exception * E) {
 		Log("ERROR> " + E->Message, USCLIB_LOG_ERROR);
 	}
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __fastcall TFormW3C::BtnStartClick(TObject *Sender) {
 	BtnStart->Enabled = false;
 	BtnStop->Enabled = true;
@@ -259,13 +259,13 @@ void __fastcall TFormW3C::BtnStartClick(TObject *Sender) {
 
 		InterpreterStartNext();
 	}
-	catch(Exception * E) {
+	catch (Exception * E) {
 		Log("ERROR> " + E->Message, USCLIB_LOG_ERROR);
 	}
 
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __fastcall TFormW3C::BtnStopClick(TObject *Sender) {
 	BtnStart->Enabled = true;
 	BtnStop->Enabled = false;
@@ -276,12 +276,12 @@ void __fastcall TFormW3C::BtnStopClick(TObject *Sender) {
 				throw Exception(usclib_GetLastError());
 		}
 	}
-	catch(Exception * E) {
+	catch (Exception * E) {
 		Log("ERROR> " + E->Message, USCLIB_LOG_ERROR);
 	}
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __fastcall TFormW3C::BtnResetClick(TObject *Sender) {
 	for (int i = 0; i < TreeTests->Items->Count; i++) {
 		TreeTests->Items->Item[i]->ImageIndex = SCXML_TREE_NODE_UNKNOWN;
@@ -290,4 +290,4 @@ void __fastcall TFormW3C::BtnResetClick(TObject *Sender) {
 	RichEdit1->Clear();
 	ProgressBar1->Position = 0;
 }
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------

@@ -70,7 +70,7 @@ __fastcall TFormTrafficLight::TFormTrafficLight(TComponent* Owner) : TForm(Owner
 
 		usclib_RegisterInterpreterEnterCallback(g_Interpreter, OnInterpreterEnterExit, this);
 
-		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), false))
+		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE))
 			throw Exception(usclib_GetLastError());
 	}
 	catch(Exception * E) {

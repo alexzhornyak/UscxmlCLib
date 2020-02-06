@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 #include <vcl.h>
 #pragma hdrstop
@@ -12,14 +12,14 @@
 
 #pragma comment(lib,"UscxmlCLib_borland.lib")
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 TFormKT76C *FormKT76C = NULL;
 
 UsclibInterpreter *g_Interpreter = NULL;
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 class TGlobalDataNotify : public TIdNotify {
 	const UnicodeString FName;
 	const UnicodeString FData;
@@ -30,9 +30,9 @@ protected:
 			if (TLabel * ALabel = dynamic_cast<TLabel*>(FormKT76C->Components[i])) {
 				if (ALabel->Hint == FName) {
 
-                    // On-Off controls were marked with 'Tag=1'
+					// On-Off controls were marked with 'Tag=1'
 
-					switch(ALabel->Tag) {
+					switch (ALabel->Tag) {
 					case 1:
 						ALabel->Visible = FData.ToIntDef(0);
 						break;
@@ -49,7 +49,7 @@ public:
 	}
 };
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __stdcall OnInterpreterGlobalDataChange(const UsclibInterpreter *AInterpreter, const char *chName, const char *chPath,
 	const char *chAtomOrJsonData, const bool bIsAtomOrJson, const int iType, void *AUser) {
 
@@ -61,9 +61,9 @@ void __stdcall OnInterpreterGlobalDataChange(const UsclibInterpreter *AInterpret
 	}
 }
 
-//---------------------------------------------------------------------------
-//--------------------------- TFormTrafficLight -----------------------------
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// --------------------------- TFormTrafficLight -----------------------------
+// ---------------------------------------------------------------------------
 __fastcall TFormKT76C::TFormKT76C(TComponent* Owner) : TForm(Owner) {
 	try {
 		const AnsiString sScxmlFile = TPath::Combine(ExtractFilePath(Application->ExeName), "..\\..\\..\\..\\StateCharts\\KT76C.scxml");
@@ -81,12 +81,12 @@ __fastcall TFormKT76C::TFormKT76C(TComponent* Owner) : TForm(Owner) {
 		if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, &AInterpreterOptions))
 			throw Exception(usclib_GetLastError());
 
-		usclib_RegisterInterpreterGlobalDataChangeCallback(g_Interpreter, true /*atom*/, OnInterpreterGlobalDataChange, NULL);
+		usclib_RegisterInterpreterGlobalDataChangeCallback(g_Interpreter, OnInterpreterGlobalDataChange, USCLIB_DATATYPE_ATOM, NULL);
 
-		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), false))
+		if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE))
 			throw Exception(usclib_GetLastError());
 	}
-	catch(Exception * E) {
+	catch (Exception * E) {
 		TrayIcon1->BalloonHint = E->Message;
 		TrayIcon1->BalloonFlags = bfError;
 		TrayIcon1->ShowBalloonHint();
@@ -94,10 +94,10 @@ __fastcall TFormKT76C::TFormKT76C(TComponent* Owner) : TForm(Owner) {
 	}
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 __fastcall TFormKT76C::~TFormKT76C(void) {
 	if (g_Interpreter) {
-        // we generate 'Quit' event to give State Chart an option to save settings
+		// we generate 'Quit' event to give State Chart an option to save settings
 		usclib_TriggerEvent(g_Interpreter, "Quit");
 		usclib_WaitForInterpreterStopped(g_Interpreter);
 
@@ -106,7 +106,7 @@ __fastcall TFormKT76C::~TFormKT76C(void) {
 	usclib_GlobalCleanup();
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 void __fastcall TFormKT76C::BtnSupplyClick(TObject *Sender) {
 	if (g_Interpreter) {
@@ -116,7 +116,7 @@ void __fastcall TFormKT76C::BtnSupplyClick(TObject *Sender) {
 	}
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __fastcall TFormKT76C::TrackBar1Change(TObject *Sender) {
 	if (g_Interpreter) {
 		const AnsiString sName = TrackBar1->Hint;
@@ -124,7 +124,7 @@ void __fastcall TFormKT76C::TrackBar1Change(TObject *Sender) {
 	}
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void __fastcall TFormKT76C::SpeedButton1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift, int X, int Y) {
 	TSpeedButton * AButton = dynamic_cast<TSpeedButton*>(Sender);
 	if (AButton) {
@@ -137,7 +137,7 @@ void __fastcall TFormKT76C::SpeedButton1MouseDown(TObject *Sender, TMouseButton 
 		}
 	}
 }
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 void __fastcall TFormKT76C::SpeedButton1MouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift, int X, int Y) {
 	TSpeedButton * AButton = dynamic_cast<TSpeedButton*>(Sender);
@@ -151,4 +151,4 @@ void __fastcall TFormKT76C::SpeedButton1MouseUp(TObject *Sender, TMouseButton Bu
 		}
 	}
 }
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------

@@ -69,8 +69,8 @@
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
         <DynamicRTL>true</DynamicRTL>
         <UsePackages>true</UsePackages>
-        <IncludePath>..\TesterW3C\;$(CG_BOOST_ROOT)\boost\tr1\tr1;$(BDS)\include;$(BDS)\include\vcl;$(CG_BOOST_ROOT);..\..\..\..\Include;$(IncludePath)</IncludePath>
-        <ILINK_LibraryPath>..\TesterW3C\;$(BDS)\lib\obj;..\..\..\..\Lib;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <IncludePath>$(CG_BOOST_ROOT)\boost\tr1\tr1;$(BDS)\include;$(BDS)\include\vcl;$(CG_BOOST_ROOT);..\..\..\..\Include;$(IncludePath)</IncludePath>
+        <ILINK_LibraryPath>$(BDS)\lib\obj;..\..\..\..\Lib;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <BCC_wpar>false</BCC_wpar>
         <BCC_OptimizeForSpeed>true</BCC_OptimizeForSpeed>
         <BCC_ExtendedErrorInfo>true</BCC_ExtendedErrorInfo>

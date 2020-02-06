@@ -223,7 +223,7 @@ void __fastcall TFormW3C::InterpreterStartNext() {
 					Log("Test is manual or restricted!", USCLIB_LOG_WARN);
 				}
 
-				if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), false)) {
+				if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE)) {
 					TreeTests->Items->Item[i]->ImageIndex = SCXML_TREE_NODE_ERROR;
 					TreeTests->Items->Item[i]->SelectedIndex = TreeTests->Items->Item[i]->ImageIndex;
 					throw Exception(usclib_GetLastError());
