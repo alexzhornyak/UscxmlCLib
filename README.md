@@ -102,6 +102,6 @@ It has **ZERO** lines of device logic in C++! Just connected GUI controls!
 
 ![KT76C_orig](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_Orig.gif)
 
-![KT76C_example](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.gif)
-
 ![KT76C_Logic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C.png)
+
+![KT76C_example](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.gif)
