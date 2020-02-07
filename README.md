@@ -100,6 +100,8 @@ After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/READ
 ### Take special look at [KT76C Transponder Example](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/KT76CSim)\!
 It has **ZERO** lines of device logic in C++! Just connected GUI controls!
 
-![KT76C](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.png)
+![KT76C_orig](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_Orig.gif)
+
+![KT76C_example](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.gif)
 
 ![KT76C_Logic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C.png)
