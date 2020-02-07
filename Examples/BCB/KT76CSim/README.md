@@ -2,13 +2,13 @@
 
 The BendixKing KT 76C transponder - radio transmitter/receiver which operates on radar frequencies
 
-![KT76C_Orig](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_Orig.png)
+![KT76C_Orig](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_Orig.gif)
 
 ## SCXML Device Logic
 ![KT76C_Logic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C.png)
 
 ## Simulator
-![KT76C](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.png)
+![KT76C](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.gif)
 
 All buttons have **same handler** which transmit event to state machine with data about button's state (pressed|released)
 ```
