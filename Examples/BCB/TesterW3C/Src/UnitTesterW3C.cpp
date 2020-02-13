@@ -71,6 +71,7 @@ protected:
 					}
 				}
 
+				FormW3C->Log("Elapsed: " + FormW3C->Elapsed().FormatString("hh:mm:ss.zzz"), USCLIB_LOG_INFO);
 				FormW3C->Log("All " + UnicodeString(FormW3C->ProgressBar1->Max) + " tests were completed!", USCLIB_LOG_INFO);
 				FormW3C->Log("Passed: " + UnicodeString(iPassed), USCLIB_LOG_INFO);
 				FormW3C->Log("Manual or restricted: " + UnicodeString(iManual), USCLIB_LOG_INFO);
@@ -80,7 +81,9 @@ protected:
 				FormW3C->InterpreterStartNext();
 			}
 		}
-
+		else {
+			FormW3C->Log("User cancelled!", USCLIB_LOG_WARN);
+		}
 	}
 
 public:
@@ -118,7 +121,7 @@ void __stdcall OnInterpreterLog(const int nSeverity, const char *chMessage, void
 }
 
 //---------------------------------------------------------------------------
-//--------------------------- TFormTrafficLight -----------------------------
+//--------------------------- TFormW3C --------------------------------------
 //---------------------------------------------------------------------------
 __fastcall TFormW3C::TFormW3C(TComponent* Owner) : TForm(Owner) {
 	try {
@@ -255,6 +258,8 @@ void __fastcall TFormW3C::BtnStartClick(TObject *Sender) {
 
 			if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, &AInterpreterOptions))
 				throw Exception(usclib_GetLastError());
+
+			FStarted = Now();
 		}
 
 		InterpreterStartNext();

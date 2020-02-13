@@ -29,6 +29,7 @@ __published:	// IDE-managed Components
 	void __fastcall BtnResetClick(TObject *Sender);
 private:	// User declarations
 	UnicodeString FDirW3C;
+	TDateTime FStarted;
 public:		// User declarations
 	__fastcall TFormW3C(TComponent* Owner);
 	virtual __fastcall ~TFormW3C(void);
@@ -36,6 +37,8 @@ public:		// User declarations
 	void __fastcall Log(const UnicodeString &sMsg, const int ASeverity);
 
 	void __fastcall InterpreterStartNext();
+
+	inline TDateTime __fastcall Elapsed() { return Now() - FStarted; }
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TFormW3C *FormW3C;

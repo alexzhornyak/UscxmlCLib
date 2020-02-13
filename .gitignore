@@ -11,4 +11,6 @@ __history
 *.filters
 *.vcxproj.user
 *.opendb
-/Examples/Qt/KT76CSim/*.user
+
+# Qt
+*pro.user
