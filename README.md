@@ -1,4 +1,4 @@
-# USCXML C-Style Wrapper (for C++ Builder, Delphi)
+# USCXML C-Style Wrapper (for C++ Builder, Delphi, Qt)
 ![intro](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/TrafficLight.gif)
 
 ## State Machines in C++ Builder, Delphi
@@ -6,6 +6,8 @@ The main objective of the project is to execute dynamic SCXML state charts in C+
 [USCXML](https://github.com/tklab-tud/uscxml). But the problem is that USCXML source code can not be compiled by Borland C++ Compiler (not full C11 support, compiler bugs etc). We have an option to use [uscxml-transformer application](https://github.com/tklab-tud/uscxml/blob/master/src/apps/uscxml-transform.cpp) for transpiling SCXML source code to ANSI-C. But in this case you have to compile application every time once you've made corrections to state chart. The solution seems to have a common library wrapper with only C-functions, which could be executed on all versions of C++ Builder.
 
 **UscxmlCLib** consists of only 1 lib and 1 header which should be added to C++ Builder to start executing state charts.
+
+#### [However it is possible and easy to use **UscxmlCLib** in other systems such as Qt.](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt) 
 
 ## Supported Operating System
 Windows 7, Windows 8, Windows 10
@@ -88,6 +90,7 @@ UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause Licen
 
 ## SCXML Standard Compliance
 Almost the same as uSCXML original with some restrictions. Run W3C [testing application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TesterW3C) to get more info
+![TesterW3C](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/TesterW3CVCL.png)
 
 ## DataModels supported
 1. NULL
@@ -95,7 +98,20 @@ Almost the same as uSCXML original with some restrictions. Run W3C [testing appl
 3. Luavia (Lua datamodel with some non-standard extensions to increase state chart performance)
 
 ## Examples
-After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/README.md#installation) you are able to start [ready-to-use examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples): [HelloWorld](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/HelloWorld), [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TrafficLight) etc.
+After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/README.md#installation) you are able to start ready-to-use examples.
+
+### [C++ Builder Examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB)
+* [Hello World](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/HelloWorld)
+* [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TrafficLight)
+* [Multiple Interpreters](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/MultipleInterpreters)
+* [KT76C Transponder Simulator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/KT76CSim)
+* [Salus RT500 (Digital Room Thermostat) Simulator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/SalusRT500Sim)
+* [W3C SCXML Testing Application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TesterW3C)
+* [UscxmlCLib Testing Application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/GlobalTestLibrary)
+
+### [Qt Examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt)
+* [KT76C Transponder Simulator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt/KT76CSim)
+* [W3C SCXML Testing Application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt/TesterW3C)
 
 ### Take special look at [KT76C Transponder Example](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/KT76CSim)\!
 It has **ZERO** lines of device logic in C++! Just connected GUI controls!
@@ -104,4 +120,4 @@ It has **ZERO** lines of device logic in C++! Just connected GUI controls!
 
 ![KT76C_Logic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C.png)
 
-![KT76C_example](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.gif)
+![KT76C_example](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Qt.gif)
