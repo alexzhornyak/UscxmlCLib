@@ -10,7 +10,7 @@
 #include "UscxmlLuaDataModelEx.h"
 
 ScxmlBase::ScxmlBase(const std::vector<std::string> &ACMDArgs, const ScxmlBaseOptions &AScxmlBaseOptions, const bool bHttpEnabled/* = false*/):
-	_options(AScxmlBaseOptions), _httpEnabled(bHttpEnabled) {
+	_options(AScxmlBaseOptions), _httpEnabled(bHttpEnabled), _CMDArgs(ACMDArgs) {
 	
 	if (_options.Monitor) {
 		std::stringstream ss;
