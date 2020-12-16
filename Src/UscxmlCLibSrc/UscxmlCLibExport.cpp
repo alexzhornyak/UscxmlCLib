@@ -104,11 +104,6 @@ int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 	try {
 		std::vector<std::string> AVecString(chCMD, chCMD + nCMD);
 
-		if (chCMD && nCMD) {
-			std::vector<std::string> AVecCmd(chCMD, chCMD + nCMD);
-			AVecString.swap(AVecCmd);
-		}
-		
 		ScxmlBaseOptions AScxmlBaseOptions;
 
 		if (AInterpreterOptions) {
@@ -128,6 +123,9 @@ int USCXMLCLIBAPI usclib_OpenInterpreter(UsclibInterpreter **AInterpreter,
 			AScxmlBaseOptions.DisableGlobalData = AInterpreterOptions->DisableGlobalData;
 			AScxmlBaseOptions.AsyncStart = AInterpreterOptions->AsyncStart;
 		}
+
+		/* 'USCXML cache option' may cause AccessViolation while reading cached JSON */
+		setenv("USCXML_NOCACHE_FILES", "true", 1);
 
 		ScxmlBase *AScxmlBase = new ScxmlBase(AVecString, AScxmlBaseOptions, g_HTTP_ENABLED);
 
