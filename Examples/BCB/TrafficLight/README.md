@@ -4,7 +4,7 @@ VCL forms application that demonstrates classical traffic light example
 ![Traffic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/TrafficLight.gif)
 ```
 <?xml version="1.0" encoding="UTF-8"?>
-<scxml initial="working" name="TrafficLightStateMachine" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" qt:editorversion="4.3.1">
+<scxml initial="working" name="TrafficLightStateMachine" version="1.0" xmlns="http://www.w3.org/2005/07/scxml">
 	<state id="working" initial="red">
 		<onexit>
 			<cancel sendid="ID_startGoingGreen"/>
