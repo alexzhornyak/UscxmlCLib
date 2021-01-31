@@ -34,14 +34,14 @@ Let's start ['Hello, world' example](https://github.com/alexzhornyak/SCXML-tutor
 ![hello_world](https://github.com/alexzhornyak/SCXML-tutorial/blob/master/Images/1%20-%20Hello%20world.gif)
 
 1. Add library to project
-```
+```cpp
 #include "UscxmlCLib.h"
 
 #pragma comment(lib,"UscxmlCLib_borland.lib")
 ```
 
 2. Set callbacks from interpreter and notifiers for main thread
-```
+```cpp
 class TLogNotify : public TIdNotify {
 	const UnicodeString FMessage;
 
@@ -61,7 +61,7 @@ void __stdcall OnInterpreterLogCallback(const UsclibInterpreter *AInterpreter, c
 ```
 
 3. Work with interprter
-```
+```cpp
 if (USCLIB_SUCCESS != usclib_OpenInterpreter(&g_Interpreter, 0, 0, 0))
 	throw Exception(usclib_GetLastError());
 
