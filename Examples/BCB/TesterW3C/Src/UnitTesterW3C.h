@@ -30,6 +30,12 @@ __published:	// IDE-managed Components
 private:	// User declarations
 	UnicodeString FDirW3C;
 	TDateTime FStarted;
+protected:
+
+	void __fastcall ProcessedNode(TTreeNode *ANode, const bool APass);
+
+	friend class TStoppedNotify;
+
 public:		// User declarations
 	__fastcall TFormW3C(TComponent* Owner);
 	virtual __fastcall ~TFormW3C(void);

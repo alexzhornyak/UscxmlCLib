@@ -37,53 +37,7 @@ class TStoppedNotify : public TIdNotify {
 
 protected:
 	virtual void __fastcall DoNotify(void) {
-
-		const bool bUserCancelled = !FormW3C->BtnStop->Enabled;
-
-		if (!bUserCancelled) {
-			if (FNode->Data) {
-				FNode->ImageIndex = SCXML_TREE_NODE_MANUAL;
-			}
-			else {
-				FNode->ImageIndex = FPass ? SCXML_TREE_NODE_SUCCESS : SCXML_TREE_NODE_ERROR;
-			}
-			FNode->SelectedIndex = FNode->ImageIndex;
-			FNode->MakeVisible();
-
-			FormW3C->ProgressBar1->Position = FNode->Index + 1;
-
-			if (FormW3C->ProgressBar1->Position == FormW3C->ProgressBar1->Max) {
-				FormW3C->BtnStop->Click();
-
-				int iPassed = 0;
-				int iManual = 0;
-				int iNotPassed = 0;
-				for (int i = 0; i < FormW3C->TreeTests->Items->Count; i++) {
-					switch(FormW3C->TreeTests->Items->Item[i]->ImageIndex) {
-					case SCXML_TREE_NODE_SUCCESS:
-						iPassed++;
-						break;
-					case SCXML_TREE_NODE_MANUAL:
-						iManual++;
-						break;
-					default:
-						iNotPassed++;
-					}
-				}
-
-				FormW3C->Log("Elapsed: " + FormW3C->Elapsed().FormatString("hh:mm:ss.zzz"), USCLIB_LOG_INFO);
-				FormW3C->Log("All " + UnicodeString(FormW3C->ProgressBar1->Max) + " tests were completed!", USCLIB_LOG_INFO);
-				FormW3C->Log("Passed: " + UnicodeString(iPassed), USCLIB_LOG_INFO);
-				FormW3C->Log("Manual or restricted: " + UnicodeString(iManual), USCLIB_LOG_INFO);
-				FormW3C->Log("Failed: " + UnicodeString(iNotPassed), iNotPassed ? USCLIB_LOG_ERROR : USCLIB_LOG_INFO);
-			}
-			else {
-				FormW3C->InterpreterStartNext();
-			}
-		}
-		else {
-			FormW3C->Log("User cancelled!", USCLIB_LOG_WARN);
-		}
+		FormW3C->ProcessedNode(FNode, FPass);
 	}
 
 public:
@@ -133,12 +87,20 @@ __fastcall TFormW3C::TFormW3C(TComponent* Owner) : TForm(Owner) {
 		AWarningTestsPtr->Add("test307.scxml"); // manual
 		AWarningTestsPtr->Add("test415.scxml"); // halt processing when final is initial
 		AWarningTestsPtr->Add("test530.scxml"); // XML Nodes in script expressions not supported
-		AWarningTestsPtr->Add("test562.scxml"); // content without evaluation not supported (only valid expressions)
+		AWarningTestsPtr->Add("test557.scxml"); // crashes in C++ Builder
+		AWarningTestsPtr->Add("test561.scxml"); // crashes in C++ Builder
 
-		FDirW3C = TPath::Combine(ExtractFilePath(Application->ExeName), "..\\..\\..\\..\\StateCharts\\W3C\\Lua");
+		if (ParamCount() > 0) {
+			FDirW3C = ParamStr(1);
+		}
+		else {
+			FDirW3C = TPath::Combine(ExtractFilePath(Application->ExeName), "..\\..\\..\\..\\StateCharts\\W3C\\Lua");
+		}
 
 		if (!DirectoryExists(FDirW3C))
 			throw Exception("Directory [" + FDirW3C + "] does not exist!");
+
+		this->Caption = this->Caption + " [" + TPath::GetFullPath(FDirW3C) + "]";
 
 		const AnsiString sLogFile = ChangeFileExt(Application->ExeName, ".scxml.log");
 		if (USCLIB_SUCCESS != usclib_InitLogging(sLogFile.c_str(), OnInterpreterLog, NULL))
@@ -224,12 +186,14 @@ void __fastcall TFormW3C::InterpreterStartNext() {
 				Log("Starting " + TreeTests->Items->Item[i]->Text + "...", USCLIB_LOG_INFO);
 				if (TreeTests->Items->Item[i]->Data) {
 					Log("Test is manual or restricted!", USCLIB_LOG_WARN);
+					FormW3C->ProcessedNode(TreeTests->Items->Item[i], false);
 				}
-
-				if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE)) {
-					TreeTests->Items->Item[i]->ImageIndex = SCXML_TREE_NODE_ERROR;
-					TreeTests->Items->Item[i]->SelectedIndex = TreeTests->Items->Item[i]->ImageIndex;
-					throw Exception(usclib_GetLastError());
+				else {
+					if (USCLIB_SUCCESS != usclib_StartInterpreter(g_Interpreter, sScxmlFile.c_str(), USCLIB_SCXML_AS_FILE)) {
+						TreeTests->Items->Item[i]->ImageIndex = SCXML_TREE_NODE_ERROR;
+						TreeTests->Items->Item[i]->SelectedIndex = TreeTests->Items->Item[i]->ImageIndex;
+						throw Exception(usclib_GetLastError());
+					}
 				}
 
 				break;
@@ -294,5 +258,55 @@ void __fastcall TFormW3C::BtnResetClick(TObject *Sender) {
 	}
 	RichEdit1->Clear();
 	ProgressBar1->Position = 0;
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TFormW3C::ProcessedNode(TTreeNode *ANode, const bool APass) {
+	const bool bUserCancelled = !this->BtnStop->Enabled;
+
+	if (!bUserCancelled) {
+		if (ANode->Data) {
+			ANode->ImageIndex = SCXML_TREE_NODE_MANUAL;
+		}
+		else {
+			ANode->ImageIndex = APass ? SCXML_TREE_NODE_SUCCESS : SCXML_TREE_NODE_ERROR;
+		}
+		ANode->SelectedIndex = ANode->ImageIndex;
+		ANode->MakeVisible();
+
+		this->ProgressBar1->Position = ANode->Index + 1;
+
+		if (this->ProgressBar1->Position == this->ProgressBar1->Max) {
+			this->BtnStop->Click();
+
+			int iPassed = 0;
+			int iManual = 0;
+			int iNotPassed = 0;
+			for (int i = 0; i < this->TreeTests->Items->Count; i++) {
+				switch(this->TreeTests->Items->Item[i]->ImageIndex) {
+				case SCXML_TREE_NODE_SUCCESS:
+					iPassed++;
+					break;
+				case SCXML_TREE_NODE_MANUAL:
+					iManual++;
+					break;
+				default:
+					iNotPassed++;
+				}
+			}
+
+			this->Log("Elapsed: "+this->Elapsed().FormatString("hh:mm:ss.zzz"), USCLIB_LOG_INFO);
+			this->Log("All " + UnicodeString(this->ProgressBar1->Max) + " tests were completed!", USCLIB_LOG_INFO);
+			this->Log("Passed: " + UnicodeString(iPassed), USCLIB_LOG_INFO);
+			this->Log("Manual or restricted: " + UnicodeString(iManual), USCLIB_LOG_INFO);
+			this->Log("Failed: " + UnicodeString(iNotPassed), iNotPassed ? USCLIB_LOG_ERROR : USCLIB_LOG_INFO);
+		}
+		else {
+			this->InterpreterStartNext();
+		}
+	}
+	else {
+		this->Log("User cancelled!", USCLIB_LOG_WARN);
+	}
 }
 //---------------------------------------------------------------------------

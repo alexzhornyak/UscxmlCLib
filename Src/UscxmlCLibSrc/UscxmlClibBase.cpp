@@ -57,6 +57,7 @@ void  ScxmlBase::start(const std::string &sTextOrFile, const bool bIsText) {
 	std::set<Factory::PluginType> FACTORY_TYPES{
 		Factory::PluginType::ptSCXMLIOProcessor,
 		Factory::PluginType::ptLuaDataModel,
+		Factory::PluginType::ptJSCDataModel,
 		Factory::PluginType::ptNullDataModel,
 		Factory::PluginType::ptUSCXMLInvoker
 	};

@@ -58,16 +58,16 @@
 			<TASM_Debugging>None</TASM_Debugging>
 		</PropertyGroup>
 		<ItemGroup>
-			<CppCompile Include="TesterW3C.cpp">
-				<BuildOrder>0</BuildOrder>
-			</CppCompile>
-			<ResFiles Include="TesterW3C.res">
-				<BuildOrder>1</BuildOrder>
-			</ResFiles>
 			<CppCompile Include="..\Src\UnitTesterW3C.cpp">
 				<Form>FormW3C</Form>
 				<DependentOn>..\Src\UnitTesterW3C.h</DependentOn>
 				<BuildOrder>2</BuildOrder>
+			</CppCompile>
+			<ResFiles Include="TesterW3C.res">
+				<BuildOrder>1</BuildOrder>
+			</ResFiles>
+			<CppCompile Include="TesterW3C.cpp">
+				<BuildOrder>0</BuildOrder>
 			</CppCompile>
 			<FormResources Include="..\Src\UnitTesterW3C.dfm"/>
 			<BuildConfiguration Include="Base">
