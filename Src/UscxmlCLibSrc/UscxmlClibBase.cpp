@@ -618,10 +618,22 @@ void SequenceCheckingMonitor::afterTakingTransition(Interpreter& interpreter, co
 void SequenceCheckingMonitor::beforeProcessingEvent(Interpreter & interpreter, const uscxml::Event & event)
 {
 	if (_ScxmlBase->_OnInterpreterEvent) {
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
-		_ScxmlBase->_OnInterpreterEvent(_ScxmlBase, interpreter.getImpl()->getName().c_str(), event.name.c_str(),
-			_ScxmlBase->_OnInterpreterEventAtomOrJson ? event.data.atom.c_str() : event.data.asJSON().c_str(),
-			_ScxmlBase->_OnInterpreterEventAtomOrJson,
-			_ScxmlBase->_OnInterpreterEventUser);
+		std::lock_guard<std::recursive_mutex> lock(_mutex);		
+		if (event.params.size()) {
+			for (const auto &it : event.params) {
+				const std::string s_eventname_with_param = event.name + "." + it.first;
+				_ScxmlBase->_OnInterpreterEvent(_ScxmlBase, interpreter.getImpl()->getName().c_str(), s_eventname_with_param.c_str(),
+					_ScxmlBase->_OnInterpreterEventAtomOrJson ? it.second.atom.c_str() : it.second.asJSON().c_str(),
+					_ScxmlBase->_OnInterpreterEventAtomOrJson,
+					_ScxmlBase->_OnInterpreterEventUser);
+			}
+		}
+		else {
+			_ScxmlBase->_OnInterpreterEvent(_ScxmlBase, interpreter.getImpl()->getName().c_str(), event.name.c_str(),
+				_ScxmlBase->_OnInterpreterEventAtomOrJson ? event.data.atom.c_str() : event.data.asJSON().c_str(),
+				_ScxmlBase->_OnInterpreterEventAtomOrJson,
+				_ScxmlBase->_OnInterpreterEventUser);
+		}
+		
 	}
 }
