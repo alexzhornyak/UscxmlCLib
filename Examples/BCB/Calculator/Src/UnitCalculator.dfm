@@ -7,12 +7,12 @@ object FormCalculator: TFormCalculator
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -16
+  Font.Name = 'Arial'
   Font.Style = []
   OldCreateOrder = False
   PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 18
   object Panel1: TPanel
     AlignWithMargins = True
     Left = 3
@@ -22,9 +22,6 @@ object FormCalculator: TFormCalculator
     Align = alTop
     BevelInner = bvLowered
     TabOrder = 0
-    ExplicitLeft = 256
-    ExplicitTop = 88
-    ExplicitWidth = 185
     object LabelDisplay: TLabel
       AlignWithMargins = True
       Left = 5
@@ -36,9 +33,9 @@ object FormCalculator: TFormCalculator
       Alignment = taRightJustify
       Caption = '0'
       Layout = tlCenter
-      ExplicitLeft = 718
-      ExplicitWidth = 6
-      ExplicitHeight = 13
+      ExplicitLeft = 309
+      ExplicitWidth = 9
+      ExplicitHeight = 18
     end
   end
   object Panel2: TPanel
@@ -50,9 +47,6 @@ object FormCalculator: TFormCalculator
     Align = alTop
     BevelInner = bvLowered
     TabOrder = 1
-    ExplicitLeft = 280
-    ExplicitTop = 248
-    ExplicitWidth = 185
     object Button1: TButton
       AlignWithMargins = True
       Left = 248
@@ -62,10 +56,15 @@ object FormCalculator: TFormCalculator
       Hint = 'OPER.MINUS'
       Align = alLeft
       Caption = '-'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
       TabOrder = 0
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
+      OnClick = ButtonClick
+      ExplicitTop = 10
     end
     object Button2: TButton
       AlignWithMargins = True
@@ -76,11 +75,14 @@ object FormCalculator: TFormCalculator
       Hint = 'OPER.PLUS'
       Align = alLeft
       Caption = '+'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
       TabOrder = 1
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button3: TButton
       AlignWithMargins = True
@@ -88,12 +90,17 @@ object FormCalculator: TFormCalculator
       Top = 5
       Width = 75
       Height = 31
+      Hint = 'OPER.STAR'
       Align = alLeft
       Caption = #215
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
       TabOrder = 2
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
+      OnClick = ButtonClick
     end
     object Button4: TButton
       AlignWithMargins = True
@@ -101,13 +108,17 @@ object FormCalculator: TFormCalculator
       Top = 5
       Width = 75
       Height = 31
+      Hint = 'OPER.DIV'
       Align = alLeft
       Caption = #247
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
       TabOrder = 3
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
   end
   object Panel3: TPanel
@@ -119,8 +130,6 @@ object FormCalculator: TFormCalculator
     Align = alTop
     BevelInner = bvLowered
     TabOrder = 2
-    ExplicitLeft = 6
-    ExplicitTop = 58
     object Button14: TButton
       AlignWithMargins = True
       Left = 5
@@ -131,9 +140,6 @@ object FormCalculator: TFormCalculator
       Caption = '0'
       TabOrder = 0
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button15: TButton
       AlignWithMargins = True
@@ -146,9 +152,6 @@ object FormCalculator: TFormCalculator
       Caption = '.'
       TabOrder = 1
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button16: TButton
       AlignWithMargins = True
@@ -159,11 +162,14 @@ object FormCalculator: TFormCalculator
       Hint = 'EQUALS'
       Align = alLeft
       Caption = '='
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
       TabOrder = 2
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button17: TButton
       AlignWithMargins = True
@@ -174,11 +180,14 @@ object FormCalculator: TFormCalculator
       Hint = 'C'
       Align = alLeft
       Caption = 'C'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = []
+      ParentFont = False
       TabOrder = 3
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
   end
   object Panel4: TPanel
@@ -190,8 +199,6 @@ object FormCalculator: TFormCalculator
     Align = alTop
     BevelInner = bvLowered
     TabOrder = 3
-    ExplicitLeft = 6
-    ExplicitTop = 58
     object Button11: TButton
       AlignWithMargins = True
       Left = 5
@@ -202,9 +209,6 @@ object FormCalculator: TFormCalculator
       Caption = '1'
       TabOrder = 0
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button12: TButton
       AlignWithMargins = True
@@ -216,9 +220,6 @@ object FormCalculator: TFormCalculator
       Caption = '2'
       TabOrder = 1
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button13: TButton
       AlignWithMargins = True
@@ -230,9 +231,6 @@ object FormCalculator: TFormCalculator
       Caption = '3'
       TabOrder = 2
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
   end
   object Panel5: TPanel
@@ -244,8 +242,6 @@ object FormCalculator: TFormCalculator
     Align = alTop
     BevelInner = bvLowered
     TabOrder = 4
-    ExplicitLeft = 6
-    ExplicitTop = 58
     object Button8: TButton
       AlignWithMargins = True
       Left = 5
@@ -256,9 +252,6 @@ object FormCalculator: TFormCalculator
       Caption = '4'
       TabOrder = 0
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button9: TButton
       AlignWithMargins = True
@@ -270,9 +263,6 @@ object FormCalculator: TFormCalculator
       Caption = '5'
       TabOrder = 1
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button10: TButton
       AlignWithMargins = True
@@ -284,9 +274,6 @@ object FormCalculator: TFormCalculator
       Caption = '6'
       TabOrder = 2
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
   end
   object Panel6: TPanel
@@ -298,8 +285,6 @@ object FormCalculator: TFormCalculator
     Align = alTop
     BevelInner = bvLowered
     TabOrder = 5
-    ExplicitLeft = 6
-    ExplicitTop = 58
     object Button5: TButton
       AlignWithMargins = True
       Left = 5
@@ -310,9 +295,6 @@ object FormCalculator: TFormCalculator
       Caption = '7'
       TabOrder = 0
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button6: TButton
       AlignWithMargins = True
@@ -324,9 +306,6 @@ object FormCalculator: TFormCalculator
       Caption = '8'
       TabOrder = 1
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
     object Button7: TButton
       AlignWithMargins = True
@@ -338,9 +317,6 @@ object FormCalculator: TFormCalculator
       Caption = '9'
       TabOrder = 2
       OnClick = ButtonClick
-      ExplicitLeft = 128
-      ExplicitTop = 8
-      ExplicitHeight = 25
     end
   end
   object TrayIcon1: TTrayIcon

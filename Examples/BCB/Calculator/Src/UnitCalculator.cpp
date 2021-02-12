@@ -27,9 +27,7 @@ class TEventNotify : public TIdNotify {
 
 protected:
 	virtual void __fastcall DoNotify(void) {
-		if (SameText(FName, "updateDisplay")) {
-			FormCalculator->LabelDisplay->Caption = FData;
-		}
+		FormCalculator->LabelDisplay->Caption = FData;
 	}
 
 public:
@@ -40,8 +38,9 @@ public:
 // ---------------------------------------------------------------------------
 void __stdcall OnInterpreterEvent(const UsclibInterpreter *AInterpreter, const char *chStateMachineName, const char *chEventName,
 	const char *chAtomOrJsonData, const UsclibDataType bIsAtomOrJson, void *AUser) {
-
-	(new TEventNotify(chEventName, chAtomOrJsonData))->Notify();
+	if (SameText(chEventName, "updateDisplay.display")) {
+		(new TEventNotify(chEventName, chAtomOrJsonData))->Notify();
+	}
 }
 
 // ---------------------------------------------------------------------------

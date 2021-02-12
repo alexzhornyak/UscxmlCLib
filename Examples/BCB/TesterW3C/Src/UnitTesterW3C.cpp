@@ -49,6 +49,9 @@ public:
 void __stdcall OnInterpreterStopped(const UsclibInterpreter *AInterpreter, void *AUser) {
 	bool bPass = false;
 	usclib_IsInterpreterInState(AInterpreter, "pass", &bPass);
+	if (!bPass) {
+		usclib_IsInterpreterInState(AInterpreter, "final", &bPass);
+	}
 	(new TStoppedNotify(reinterpret_cast<TTreeNode*>(AUser), bPass))->Notify();
 }
 
