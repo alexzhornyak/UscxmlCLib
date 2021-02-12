@@ -1,3 +1,8 @@
+<a name="top-anchor"/>
+
+| [GitHub Source](https://github.com/alexzhornyak/UscxmlCLib) | [SCXML Wiki](https://alexzhornyak.github.io/SCXML-tutorial/) | [SCXML Editor](https://alexzhornyak.github.io/ScxmlEditor-Tutorial/) | [Examples](#examples) | [Forum](https://github.com/alexzhornyak/UscxmlCLib/discussions) |
+|---|---|---|---|---|
+
 # USCXML C-Style Wrapper (for C++ Builder, Delphi, Qt)
 ![intro](Examples/Images/TrafficLight.gif)
 
@@ -126,3 +131,6 @@ It has **ZERO** lines of device logic in C++! Just connected GUI controls!
 ![KT76C_Logic](Examples/Images/KT76C.png)
 
 ![KT76C_example](Examples/Images/KT76C_App_Qt.gif)
+
+| [TOP](#top-anchor) | [GitHub Source](https://github.com/alexzhornyak/UscxmlCLib) | [SCXML Wiki](https://alexzhornyak.github.io/SCXML-tutorial/) | [SCXML Editor](https://alexzhornyak.github.io/ScxmlEditor-Tutorial/) | [Examples](#examples) | [Forum](https://github.com/alexzhornyak/UscxmlCLib/discussions) |
+|---|---|---|---|---|---|
