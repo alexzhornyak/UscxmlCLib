@@ -102,10 +102,10 @@ Almost the same as uSCXML original with some restrictions. Run W3C [testing appl
 ![TesterW3C](Examples/Images/TesterW3CVCL.png)
 
 ## DataModels supported
-1. NULL
+1. [NULL](https://www.w3.org/TR/scxml/#minimal-profile)
 2. Lua
 3. Luavia (Lua datamodel with some non-standard extensions to increase state chart performance)
-4. EcmaScript [Based on JavaScriptCore binaries](https://github.com/Lichtso/JSC-Standalone)
+4. [EcmaScript](https://www.w3.org/TR/scxml/#ecma-profile) [Based on JavaScriptCore binaries](https://github.com/Lichtso/JSC-Standalone)
 
 ## Examples
 After [installation](#installation) you are able to start ready-to-use examples.
