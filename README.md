@@ -1,5 +1,5 @@
 # USCXML C-Style Wrapper (for C++ Builder, Delphi, Qt)
-![intro](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/TrafficLight.gif)
+![intro](Examples/Images/TrafficLight.gif)
 
 ## State Machines in C++ Builder, Delphi
 The main objective of the project is to execute dynamic SCXML state charts in C++ Builder by using such a great library as
@@ -7,7 +7,7 @@ The main objective of the project is to execute dynamic SCXML state charts in C+
 
 **UscxmlCLib** consists of only 1 lib and 1 header which should be added to C++ Builder to start executing state charts.
 
-#### [However it is possible and easy to use **UscxmlCLib** in other systems such as Qt.](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt) 
+#### [However it is possible and easy to use **UscxmlCLib** in other systems such as Qt.](Examples/Qt/README.md) 
 
 ## Supported Operating System
 Windows 7, Windows 8, Windows 10
@@ -29,9 +29,9 @@ MSVC 2015 SP3
 There will be special article
 
 ## Getting Started
-Let's start ['Hello, world' example](https://github.com/alexzhornyak/SCXML-tutorial#hello-world) in C++ Builder
+Let's start ['Hello, world' example](https://alexzhornyak.github.io/SCXML-tutorial/#hello-world) in C++ Builder
 
-![hello_world](https://github.com/alexzhornyak/SCXML-tutorial/blob/master/Images/1%20-%20Hello%20world.gif)
+![hello_world](https://raw.githubusercontent.com/alexzhornyak/SCXML-tutorial/master/Images/1%20-%20Hello%20world.gif)
 
 1. Add library to project
 ```cpp
@@ -77,7 +77,7 @@ if (USCLIB_SUCCESS != usclib_CloseInterpreter(g_Interpreter))
 ![image](https://user-images.githubusercontent.com/18611095/73010483-2ee4b100-3e1b-11ea-86cc-ad7be2ba65e1.png)
 
 ## Library Usage Chart
-![LibChart](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/UscxmlCLibLogic.gif)
+![LibChart](Examples/Images/UscxmlCLibLogic.gif)
 
 ## Licensing
 UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause License but it include external components with their own licensies
@@ -90,18 +90,20 @@ UscxmlCLib itself is distributed under under the terms of the BSD 3-Clause Licen
 | [libevent](http://libevent.org) | [3-clause BSD](http://libevent.org/LICENSE.txt) | Delayed event queues |
 | [uriparser](http://uriparser.sourceforge.net) | [New BSD](https://sourceforge.net/p/uriparser/git/ci/master/tree/COPYING) | Referring and resolving URIs |
 | [Lua](https://www.lua.org/) | [Under the terms of the MIT license](https://www.lua.org/license.html) | Lua Data Model |
+| [JavaScriptCore](https://webkit.org/) | [Under the LGPL and BSD licenses](https://webkit.org/licensing-webkit/) | EcmaScript Data Model |
 
 ## SCXML Standard Compliance
 Almost the same as uSCXML original with some restrictions. Run W3C [testing application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TesterW3C) to get more info
-![TesterW3C](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/TesterW3CVCL.png)
+![TesterW3C](Examples/Images/TesterW3CVCL.png)
 
 ## DataModels supported
 1. NULL
 2. Lua
 3. Luavia (Lua datamodel with some non-standard extensions to increase state chart performance)
+4. EcmaScript [Based on JavaScriptCore binaries](https://github.com/Lichtso/JSC-Standalone)
 
 ## Examples
-After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/README.md#installation) you are able to start ready-to-use examples.
+After [installation](#installation) you are able to start ready-to-use examples.
 
 ### [C++ Builder Examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB)
 * [Hello World](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/HelloWorld)
@@ -119,8 +121,8 @@ After [installation](https://github.com/alexzhornyak/UscxmlCLib/blob/master/READ
 ### Take special look at [KT76C Transponder Example](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/KT76CSim)\!
 It has **ZERO** lines of device logic in C++! Just connected GUI controls!
 
-![KT76C_orig](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_Orig.gif)
+![KT76C_orig](Examples/Images/KT76C_Orig.gif)
 
-![KT76C_Logic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C.png)
+![KT76C_Logic](Examples/Images/KT76C.png)
 
-![KT76C_example](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Qt.gif)
+![KT76C_example](Examples/Images/KT76C_App_Qt.gif)
