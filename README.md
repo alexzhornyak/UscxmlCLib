@@ -110,7 +110,7 @@ Almost the same as uSCXML original with some restrictions. Run W3C [testing appl
 ## Examples
 After [installation](#installation) you are able to start ready-to-use examples.
 
-### [C++ Builder Examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB)
+### [C++ Builder Examples](Examples/BCB/README.md)
 * [Hello World](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/HelloWorld)
 * [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TrafficLight)
 * [Multiple Interpreters](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/MultipleInterpreters)
@@ -119,7 +119,7 @@ After [installation](#installation) you are able to start ready-to-use examples.
 * [W3C SCXML Testing Application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TesterW3C)
 * [UscxmlCLib Testing Application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/GlobalTestLibrary)
 
-### [Qt Examples](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt)
+### [Qt Examples](Examples/Qt/README.md)
 * [KT76C Transponder Simulator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt/KT76CSim)
 * [W3C SCXML Testing Application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/Qt/TesterW3C)
 
