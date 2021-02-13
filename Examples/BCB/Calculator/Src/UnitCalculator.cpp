@@ -48,8 +48,8 @@ void __stdcall OnInterpreterEvent(const UsclibInterpreter *AInterpreter, const c
 // ---------------------------------------------------------------------------
 __fastcall TFormCalculator::TFormCalculator(TComponent* Owner) : TForm(Owner) {
 	try {
-		const AnsiString sScxmlFile = TPath::Combine(ExtractFilePath(Application->ExeName),
-			"..\\..\\..\\..\\StateCharts\\calculator.scxml");
+		const AnsiString sScxmlFile = TPath::GetFullPath(TPath::Combine(ExtractFilePath(Application->ExeName),
+				"..\\..\\..\\..\\StateCharts\\calculator.scxml"));
 
 		const AnsiString sLogFile = ChangeFileExt(Application->ExeName, ".scxml.log");
 		if (USCLIB_SUCCESS != usclib_InitLogging(sLogFile.c_str(), NULL, NULL))

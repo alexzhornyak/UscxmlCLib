@@ -64,7 +64,6 @@ object FormCalculator: TFormCalculator
       ParentFont = False
       TabOrder = 0
       OnClick = ButtonClick
-      ExplicitTop = 10
     end
     object Button2: TButton
       AlignWithMargins = True
