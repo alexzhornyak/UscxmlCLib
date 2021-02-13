@@ -14,7 +14,7 @@ Demonstrate how to use [UscxmlCLib](https://github.com/alexzhornyak/UscxmlCLib) 
 ![KT76C](../Images/KT76C_App_Example.gif)
 
 ### [5. Salus RT500 (Digital Room Thermostat) Simulator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/SalusRT500Sim)
-![Salus](https://github.com/alexzhornyak/Salus-RT500-Simulator/blob/master/Images/SalusPreview.gif)
+![Salus](https://raw.githubusercontent.com/alexzhornyak/Salus-RT500-Simulator/master/Images/SalusPreview.gif)
 
 ### [6. W3C SCXML Testing Application](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TesterW3C)
 ![TesterW3C](../Images/TesterW3CVCL.png)
