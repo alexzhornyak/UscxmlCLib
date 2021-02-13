@@ -113,6 +113,7 @@ After [installation](#installation) you are able to start ready-to-use examples.
 ### [C++ Builder Examples](Examples/BCB/README.md)
 * [Hello World](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/HelloWorld)
 * [Traffic Light](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/TrafficLight)
+* [Calculator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/Calculator)
 * [Multiple Interpreters](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/MultipleInterpreters)
 * [KT76C Transponder Simulator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/KT76CSim)
 * [Salus RT500 (Digital Room Thermostat) Simulator](https://github.com/alexzhornyak/UscxmlCLib/tree/master/Examples/BCB/SalusRT500Sim)
