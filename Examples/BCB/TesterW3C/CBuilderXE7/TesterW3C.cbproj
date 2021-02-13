@@ -3,7 +3,7 @@
         <ProjectGuid>{49FFC0E7-4612-4EFC-95BF-30B525E5136C}</ProjectGuid>
         <ProjectVersion>16.0</ProjectVersion>
         <MainSource>TesterW3C.cpp</MainSource>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Base>True</Base>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -120,6 +120,8 @@
         <TASM_Debugging>None</TASM_Debugging>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <LinkPackageStatics>rtl.lib;vcl.lib;IndyCore.lib;IndySystem.lib;vclx.lib</LinkPackageStatics>
+        <ILINK_LibraryPath>$(BDS)\lib\win32\release\;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <Defines>NDEBUG;$(Defines)</Defines>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
