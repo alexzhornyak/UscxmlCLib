@@ -372,6 +372,9 @@ SequenceCheckingMonitor::SequenceCheckingMonitor(ScxmlBase *AScxmlBase, const Lo
 
 		CLOG(INFO) << "Remote monitor started on host:[" << _ScxmlBase->_options.RemoteMonitorHost 
 			<< "] port:[" << _ScxmlBase->_options.RemoteMonitorPort << "]";
+
+
+		_out_socket.send_to(boost::asio::buffer("@@@"), _endpoint);
 	}
 }
 
