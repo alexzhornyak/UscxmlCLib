@@ -6,6 +6,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include <uscxml/util/String.h>
+
 #include "UscxmlClibLogger.h"
 #include "UscxmlLuaDataModelEx.h"
 
@@ -379,7 +381,7 @@ SequenceCheckingMonitor::SequenceCheckingMonitor(ScxmlBase *AScxmlBase, const Lo
 }
 
 void SequenceCheckingMonitor::sendMessage(const std::string &sInterpreterName, const std::string &sMsg, const TScxmlMsgType AType) {
-	_out_socket.send_to(boost::asio::buffer(std::to_string((long long)AType) + "@" + sInterpreterName + "@" + sMsg), _endpoint);
+	_out_socket.send_to(boost::asio::buffer(uscxml::fromLocaleToUtf8(std::to_string((long long)AType) + "@" + sInterpreterName + "@" + sMsg)), _endpoint);
 }
 
 void SequenceCheckingMonitor::beforeExitingState(Interpreter& interpreter, const XERCESC_NS::DOMElement* state)
