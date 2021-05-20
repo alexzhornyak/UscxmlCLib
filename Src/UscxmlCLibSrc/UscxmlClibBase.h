@@ -68,6 +68,8 @@ class SequenceCheckingMonitor : public uscxml::StateTransitionMonitor {
 
 	ScxmlBase *_ScxmlBase;
 
+	static std::string getInvokeIdFromInterpreter(Interpreter& interpreter);
+
 public:
 	SequenceCheckingMonitor(ScxmlBase *AScxmlBase, const Logger &logger);
 
@@ -95,7 +97,9 @@ public:
 	virtual void beforeProcessingEvent(Interpreter& interpreter, const uscxml::Event& event) override;
 
 	// sends message to remote listener
-	void sendMessage(const std::string &sInterpreterName, const std::string &sMsg, const TScxmlMsgType AType);
+	void sendMessage(const std::string &sInterpreterName, const std::string &sMsg, const TScxmlMsgType AType, const std::string &sId);
+
+	void sendClearInterpreterMessage(const std::string &sInterpreterName, const std::string &sId);
 };
 
 

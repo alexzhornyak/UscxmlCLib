@@ -380,8 +380,33 @@ SequenceCheckingMonitor::SequenceCheckingMonitor(ScxmlBase *AScxmlBase, const Lo
 	}
 }
 
-void SequenceCheckingMonitor::sendMessage(const std::string &sInterpreterName, const std::string &sMsg, const TScxmlMsgType AType) {
-	_out_socket.send_to(boost::asio::buffer(uscxml::fromLocaleToUtf8(std::to_string((long long)AType) + "@" + sInterpreterName + "@" + sMsg)), _endpoint);
+void SequenceCheckingMonitor::sendMessage(const std::string &sInterpreterName, const std::string &sMsg, const TScxmlMsgType AType, const std::string &sId) {
+	_out_socket.send_to(boost::asio::buffer(uscxml::fromLocaleToUtf8(
+		std::to_string((long long)AType) + "@" + sInterpreterName + "@" + sMsg + (sId.empty() ? sId : ("@" + sId))
+	)), _endpoint);
+}
+
+void SequenceCheckingMonitor::sendClearInterpreterMessage(const std::string & sInterpreterName, const std::string &sId)
+{
+	std::stringstream ss;
+	ss << "@@@" << sInterpreterName;
+	if (!sId.empty()) {
+		ss << "@" << sId;
+	}
+
+	_out_socket.send_to(boost::asio::buffer(uscxml::fromLocaleToUtf8(ss.str())), _endpoint);
+}
+
+std::string SequenceCheckingMonitor::getInvokeIdFromInterpreter(Interpreter& interpreter) {
+	std::string sInvokeId = "";
+	if (interpreter) {
+		const auto impl = interpreter.getImpl();
+		if (impl) {
+			sInvokeId = impl->getInvokeId();
+		}
+	}
+
+	return sInvokeId;
 }
 
 void SequenceCheckingMonitor::beforeExitingState(Interpreter& interpreter, const XERCESC_NS::DOMElement* state)
@@ -399,7 +424,8 @@ void SequenceCheckingMonitor::beforeExitingState(Interpreter& interpreter, const
 			LOG(_logger, USCXML_VERBATIM) << "Exiting: " << sId << ", interpreter [" << interpreter.getImpl()->getName() << "]" << std::endl;
 
 			if (_ScxmlBase->useRemoteMonitor()) {
-				sendMessage(interpreter.getImpl()->getName(), sId, smttBeforeExit);
+				sendMessage(interpreter.getImpl()->getName(), sId, smttBeforeExit,
+					getInvokeIdFromInterpreter(interpreter));
 			}
 		}		
 
@@ -424,7 +450,7 @@ void SequenceCheckingMonitor::afterExitingState(Interpreter& interpreter, const 
 		LOG(_logger, USCXML_VERBATIM) << "After Exiting: " << sId << ", interpreter [" << interpreter.getImpl()->getName() << "]" << std::endl;
 		
 		if (_ScxmlBase->useRemoteMonitor()) {
-			sendMessage(interpreter.getImpl()->getName(), sId, smttAfterExit);
+			sendMessage(interpreter.getImpl()->getName(), sId, smttAfterExit, getInvokeIdFromInterpreter(interpreter));
 		}
 	}	
 }
@@ -444,7 +470,7 @@ void SequenceCheckingMonitor::beforeEnteringState(Interpreter& interpreter, cons
 			LOG(_logger, USCXML_VERBATIM) << "Entering: " << sId << ", interpreter [" << interpreter.getImpl()->getName() << "]" << std::endl;
 
 			if (_ScxmlBase->useRemoteMonitor()) {
-				sendMessage(interpreter.getImpl()->getName(), sId, smttBeforeEnter);
+				sendMessage(interpreter.getImpl()->getName(), sId, smttBeforeEnter, getInvokeIdFromInterpreter(interpreter));
 			}
 		}		
 
@@ -469,7 +495,7 @@ void SequenceCheckingMonitor::afterEnteringState(Interpreter& interpreter, const
 		LOG(_logger, USCXML_VERBATIM) << "After Entering: " << sId << ", interpreter [" << interpreter.getImpl()->getName() << "]" << std::endl;
 		
 		if (_ScxmlBase->useRemoteMonitor()) {
-			sendMessage(interpreter.getImpl()->getName(), sId, smttAfterEnter);
+			sendMessage(interpreter.getImpl()->getName(), sId, smttAfterEnter, getInvokeIdFromInterpreter(interpreter));
 		}		
 	}	
 }
@@ -484,7 +510,7 @@ void SequenceCheckingMonitor::beforeExecutingContent(Interpreter& interpreter, c
 
 		if (_ScxmlBase->useRemoteMonitor()) {
 			std::lock_guard<std::recursive_mutex> lock(_mutex);
-			sendMessage(interpreter.getImpl()->getName(), DOMUtils::xPathForNode(execContent), smttBeforeExecContent);
+			sendMessage(interpreter.getImpl()->getName(), DOMUtils::xPathForNode(execContent), smttBeforeExecContent, getInvokeIdFromInterpreter(interpreter));
 		}			
 	}
 }
@@ -499,7 +525,8 @@ void SequenceCheckingMonitor::afterExecutingContent(Interpreter& interpreter, co
 		
 		if (_ScxmlBase->useRemoteMonitor()) {
 			std::lock_guard<std::recursive_mutex> lock(_mutex);
-			sendMessage(interpreter.getImpl()->getName(), DOMUtils::xPathForNode(execContent), smttAfterExecContent);
+			sendMessage(interpreter.getImpl()->getName(), DOMUtils::xPathForNode(execContent), smttAfterExecContent, 
+				getInvokeIdFromInterpreter(interpreter));
 		}			
 	}
 }
@@ -517,7 +544,12 @@ void SequenceCheckingMonitor::beforeUninvoking(Interpreter& interpreter, const X
 			LOG(_logger, USCXML_VERBATIM) << "Uninvoking: " << invokeid << ", interpreter [" << interpreter.getImpl()->getName() << "]" << std::endl;
 
 			if (_ScxmlBase->useRemoteMonitor()) {
-				sendMessage(interpreter.getImpl()->getName(), invokeid, smttBeforeUnInvoke);
+				auto impl = interpreter.getImpl();
+				if (impl) {
+					const std::string &sSubName = impl->getInvokedScxmlName(invokeid);
+					sendMessage(interpreter.getImpl()->getName(), sSubName, smttBeforeUnInvoke, invokeid);
+					sendClearInterpreterMessage(sSubName, invokeid);
+				}
 			}
 		}		
 
@@ -538,7 +570,7 @@ void SequenceCheckingMonitor::afterUninvoking(Interpreter& interpreter, const XE
 		
 		if (_ScxmlBase->useRemoteMonitor()) {
 			std::lock_guard<std::recursive_mutex> lock(_mutex);
-			sendMessage(interpreter.getImpl()->getName(), invokeid, smttAfterUnInvoke);
+			sendMessage(interpreter.getImpl()->getName(), invokeid, smttAfterUnInvoke, invokeid);
 		}			
 	}
 }
@@ -556,7 +588,7 @@ void SequenceCheckingMonitor::beforeInvoking(Interpreter& interpreter, const XER
 			LOG(_logger, USCXML_VERBATIM) << "Invoking: " << invokeid << ", interpreter [" << interpreter.getImpl()->getName() << "]" << std::endl;
 
 			if (_ScxmlBase->useRemoteMonitor()) {
-				sendMessage(interpreter.getImpl()->getName(), invokeid, smttBeforeInvoke);
+				sendMessage(interpreter.getImpl()->getName(), invokeid, smttBeforeInvoke, invokeid);
 			}
 		}		
 
@@ -577,7 +609,7 @@ void SequenceCheckingMonitor::afterInvoking(Interpreter& interpreter, const XERC
 
 		if (_ScxmlBase->useRemoteMonitor()) {
 			std::lock_guard<std::recursive_mutex> lock(_mutex);
-			sendMessage(interpreter.getImpl()->getName(), invokeid, smttAfterInvoke);
+			sendMessage(interpreter.getImpl()->getName(), invokeid, smttAfterInvoke, invokeid);
 		}			
 	}
 }
@@ -596,7 +628,8 @@ void SequenceCheckingMonitor::beforeTakingTransition(Interpreter& interpreter, c
 			if (transition->hasAttribute(X("event"))) {
 				s_event = X(transition->getAttribute(X("event")));
 			}
-			sendMessage(interpreter.getImpl()->getName(), s_event, smttBeforeTakingTransition);
+			sendMessage(interpreter.getImpl()->getName(), s_event, smttBeforeTakingTransition,
+				getInvokeIdFromInterpreter(interpreter));
 		}		
 	}
 }
@@ -615,7 +648,8 @@ void SequenceCheckingMonitor::afterTakingTransition(Interpreter& interpreter, co
 			if (transition->hasAttribute(X("event"))) {
 				s_event = X(transition->getAttribute(X("event")));
 			}
-			sendMessage(interpreter.getImpl()->getName(), s_event, smttAfterTakingTransition);
+			sendMessage(interpreter.getImpl()->getName(), s_event, smttAfterTakingTransition,
+				getInvokeIdFromInterpreter(interpreter));
 		}
 	}
 }
