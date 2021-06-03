@@ -2,16 +2,16 @@
 
 The BendixKing KT 76C transponder - radio transmitter/receiver which operates on radar frequencies
 
-![KT76C_Orig](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_Orig.gif)
+![KT76C_Orig](../../../Examples/Images/KT76C_Orig.gif)
 
 ## SCXML Device Logic
-![KT76C_Logic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C.png)
+![KT76C_Logic](../../../Examples/Images/KT76C.png)
 
 ## Simulator
-![KT76C](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/KT76C_App_Example.gif)
+![KT76C](../../../Examples/Images/KT76C_App_Example.gif)
 
 All buttons have **same handler** which transmit event to state machine with data about button's state (pressed|released)
-```
+```cpp
 //---------------------------------------------------------------------------
 void __fastcall TFormKT76C::SpeedButton1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift, int X, int Y) {
 	TSpeedButton * AButton = dynamic_cast<TSpeedButton*>(Sender);
@@ -42,7 +42,7 @@ void __fastcall TFormKT76C::SpeedButton1MouseUp(TObject *Sender, TMouseButton Bu
 ```
 
 For all outputs we also have same handler
-```
+```cpp
 virtual void __fastcall DoNotify(void) {
 	for (int i = 0; i < FormKT76C->ComponentCount; i++) {
 		if (TLabel * ALabel = dynamic_cast<TLabel*>(FormKT76C->Components[i])) {

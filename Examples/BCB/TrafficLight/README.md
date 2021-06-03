@@ -1,7 +1,7 @@
 # Traffic Light
 VCL forms application that demonstrates classical traffic light example
 
-![Traffic](https://github.com/alexzhornyak/UscxmlCLib/blob/master/Examples/Images/TrafficLight.gif)
+![Traffic](../../../Examples/Images/TrafficLight.gif)
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <scxml initial="working" name="TrafficLightStateMachine" version="1.0" xmlns="http://www.w3.org/2005/07/scxml">
